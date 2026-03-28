@@ -40,7 +40,7 @@ demo → pulse-compose     → pulse
 - **ContainerContract** — declares `STATE`, `INTENT`, `EFFECT` types + `initialState`
 - **Container** — core engine: `dispatch(intent)` → `reduce()` → new state; `handleIntent()` for async side-effects; `emitEffect()` for one-shot events; supports `restoredState` for state restoration
 - **ContainerHost** — interface exposing `stateFlow`, `effectFlow`, `dispatch`, `dispatchDebounced`
-- **Consumable** — thread-safe one-shot wrapper for effect replay without double-delivery
+- **OneTimeConsumable** — thread-safe one-shot wrapper for effect replay without double-delivery
 - **ComponentContract** — lightweight sub-container with its own reducer (no effects)
 - **PulseViewModel** — AndroidX ViewModel wrapper around Container
 - **PulseSavedStateViewModel** — PulseViewModel + SavedStateHandle auto-persistence (STATE must be `@Serializable`)

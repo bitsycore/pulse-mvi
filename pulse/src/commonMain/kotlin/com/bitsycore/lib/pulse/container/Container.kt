@@ -39,7 +39,7 @@ abstract class Container<STATE : Any, INTENT : Any, EFFECT : Any>(
 	private val stateMutableFlow = MutableStateFlow(restoredState ?: containerContract.initialState)
 	override val stateFlow: StateFlow<STATE> = stateMutableFlow.asStateFlow()
 
-	private val effectMutableFlow = MutableSharedFlow<Consumable<EFFECT>>(replay = replayUnconsumed, extraBufferCapacity = 8)
+	private val effectMutableFlow = MutableSharedFlow<OneTimeConsumable<EFFECT>>(replay = replayUnconsumed, extraBufferCapacity = 8)
 	override val effectFlow: Flow<EFFECT> = effectMutableFlow.mapNotNull { it.consume() }
 
 	/** Entry point for all UI-originated actions. Thread-safe. */
@@ -63,12 +63,12 @@ abstract class Container<STATE : Any, INTENT : Any, EFFECT : Any>(
 	 * The debounce key determines which calls cancel each other. It is resolved
 	 * as follows (first match wins):
 	 *
-	 * | `ignoreTypeForKey` | `key`   | Resulting key              | Scope                       |
-	 * |--------------------|---------|----------------------------|-----------------------------|
-	 * | `true`             | non-null| `key`                      | All intents sharing that key|
-	 * | `true`             | `null`  | `Unit`                     | **All** debounced intents   |
-	 * | `false`            | non-null| `intent::class to key`     | Same type + same key        |
-	 * | `false` (default)  | `null`  | `intent::class`            | Same intent type            |
+	 * | `ignoreTypeForKey` | `key`    | Resulting key              | Scope                       |
+	 * |--------------------|----------|----------------------------|-----------------------------|
+	 * | `true`             | non-null | `key`                      | All intents sharing that key|
+	 * | `true`             | `null`   | `Unit`                     | **All** debounced intents   |
+	 * | `false`            | non-null | `intent::class to key`     | Same type + same key        |
+	 * | `false` (default)  | `null`   | `intent::class`            | Same intent type            |
 	 *
 	 * @param intent The intent to dispatch after the debounce window.
 	 * @param key Optional string to further partition the debounce scope
@@ -120,9 +120,9 @@ abstract class Container<STATE : Any, INTENT : Any, EFFECT : Any>(
 	/** Long operation handler. Override to perform async work (network, NFC, etc.). */
 	protected open suspend fun handleIntent(intent: INTENT) {}
 
-	/** Emits a one-time effect to the screen. Thread-safe. Replay-safe via [Consumable]. */
+	/** Emits a one-time effect to the screen. Thread-safe. Replay-safe via [OneTimeConsumable]. */
 	fun emitEffect(effect: EFFECT) {
-		coroutineScope.launch { effectMutableFlow.emit(Consumable(effect)) }
+		coroutineScope.launch { effectMutableFlow.emit(OneTimeConsumable(effect)) }
 	}
 
 	/** Convenience for updating state outside of the reducer (e.g., inside callbacks). */
@@ -137,7 +137,7 @@ abstract class Container<STATE : Any, INTENT : Any, EFFECT : Any>(
  * but it is never delivered twice.
  */
 @OptIn(ExperimentalAtomicApi::class)
-private class Consumable<out T>(private val value: T) {
+private class OneTimeConsumable<out T>(private val value: T) {
 	private val consumed = AtomicBoolean(false)
 
 	/**
