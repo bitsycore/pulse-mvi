@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -106,7 +107,7 @@ private fun ColorSlider(
 
 	Row(
 		verticalAlignment = Alignment.CenterVertically,
-		modifier = Modifier.fillMaxWidth()
+		modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth()
 	) {
 		Text(label, style = MaterialTheme.typography.labelLarge, modifier = Modifier.width(20.dp))
 		Slider(
