@@ -8,6 +8,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
@@ -27,21 +29,19 @@ import androidx.navigation3.ui.NavDisplay
 import com.bitsycore.demo.page1.Page1Screen
 import com.bitsycore.demo.page2.Page2Screen
 
-private const val DURATION = 400
+private const val DURATION = 500
 
 private val forwardTransition: ContentTransform = ContentTransform(
-	slideInHorizontally(tween(DURATION)) { it / 3 }
-			+ scaleIn(tween(DURATION), initialScale = 0.85f)
-			+ fadeIn(tween(DURATION)),
-	scaleOut(tween(DURATION), targetScale = 0.9f)
-			+ fadeOut(tween(DURATION / 2))
+	slideInHorizontally(tween(DURATION)) { it }
+			+ scaleIn(tween(DURATION), initialScale = 0.85f),
+	scaleOut(tween(DURATION), targetScale = 0.5f)
 )
 
 private val popTransition: ContentTransform = ContentTransform(
-	scaleIn(tween(DURATION), initialScale = 0.9f)
+	scaleIn(tween(DURATION), initialScale = 0.85f)
 			+ fadeIn(tween(DURATION / 2)),
-	slideOutHorizontally(tween(DURATION)) { it / 3 }
-			+ scaleOut(tween(DURATION), targetScale = 0.85f)
+	slideOutHorizontally(tween(DURATION)) { it }
+			+ scaleOut(tween(DURATION), targetScale = 0.5f)
 			+ fadeOut(tween(DURATION))
 )
 
@@ -59,7 +59,7 @@ private val tabs = listOf(
 fun AppNavHost() {
 	val backStack: SnapshotStateList<Route> = listOf<Route>(Route.Page1).toMutableStateList()
 
-	Column(Modifier.fillMaxSize()) {
+	Column(Modifier.fillMaxSize().background(Color.Black)) {
 		NavDisplay(
 			backStack = backStack,
 			onBack = { backStack.removeLastOrNull() },
