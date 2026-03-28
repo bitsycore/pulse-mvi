@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -77,7 +78,7 @@ fun Page1Screen(
 		}
 	}
 
-	Box(modifier.fillMaxSize()) {
+	Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
 		MainContent(
 			state = state,
 			dispatch = viewModel::dispatch

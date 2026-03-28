@@ -1,5 +1,6 @@
 package com.bitsycore.demo.page2
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -61,7 +62,7 @@ fun Page2Screen(
 
 	Box(modifier.fillMaxSize()) {
 		Column(
-			modifier = Modifier.fillMaxSize(),
+			modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
 			horizontalAlignment = Alignment.CenterHorizontally,
 			verticalArrangement = Arrangement.Center
 		) {

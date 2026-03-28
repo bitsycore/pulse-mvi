@@ -1,10 +1,20 @@
 package com.bitsycore.demo
 
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -16,6 +26,24 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.bitsycore.demo.page1.Page1Screen
 import com.bitsycore.demo.page2.Page2Screen
+
+private const val DURATION = 400
+
+private val forwardTransition: ContentTransform = ContentTransform(
+	slideInHorizontally(tween(DURATION)) { it / 3 }
+			+ scaleIn(tween(DURATION), initialScale = 0.85f)
+			+ fadeIn(tween(DURATION)),
+	scaleOut(tween(DURATION), targetScale = 0.9f)
+			+ fadeOut(tween(DURATION / 2))
+)
+
+private val popTransition: ContentTransform = ContentTransform(
+	scaleIn(tween(DURATION), initialScale = 0.9f)
+			+ fadeIn(tween(DURATION / 2)),
+	slideOutHorizontally(tween(DURATION)) { it / 3 }
+			+ scaleOut(tween(DURATION), targetScale = 0.85f)
+			+ fadeOut(tween(DURATION))
+)
 
 sealed interface Route {
 	data object Page1 : Route
@@ -36,6 +64,8 @@ fun AppNavHost() {
 			backStack = backStack,
 			onBack = { backStack.removeLastOrNull() },
 			modifier = Modifier.weight(1f).fillMaxWidth(),
+			transitionSpec = { forwardTransition },
+			popTransitionSpec = { popTransition },
 			entryDecorators = listOf(
 				rememberSaveableStateHolderNavEntryDecorator(),
 				rememberViewModelStoreNavEntryDecorator()
@@ -48,7 +78,10 @@ fun AppNavHost() {
 			}
 		)
 
-		NavigationBar {
+		NavigationBar(
+			containerColor = MaterialTheme.colorScheme.primaryContainer,
+			contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+		) {
 			tabs.forEach { (route, label) ->
 				NavigationBarItem(
 					selected = backStack.lastOrNull() == route,
@@ -61,7 +94,14 @@ fun AppNavHost() {
 						}
 					},
 					icon = {},
-					label = { Text(label) }
+					label = { Text(label) },
+					colors = NavigationBarItemDefaults.colors(
+						selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+						unselectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+						selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+						unselectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+						indicatorColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f)
+					)
 				)
 			}
 		}
