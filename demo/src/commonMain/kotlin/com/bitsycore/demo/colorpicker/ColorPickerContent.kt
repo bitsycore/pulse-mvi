@@ -1,5 +1,7 @@
 package com.bitsycore.demo.colorpicker
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -24,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -47,7 +51,7 @@ fun ColorPickerContent(
 				.border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
 		)
 
-		if (state.showHex) {
+		AnimatedVisibility (state.showHex) {
 			Spacer(Modifier.height(4.dp))
 			Text(state.hex, style = MaterialTheme.typography.labelMedium)
 		}
@@ -66,7 +70,12 @@ fun ColorPickerContent(
 			}
 			Spacer(Modifier.width(8.dp))
 			TextButton(onClick = { dispatch(ColorPickerComponent.Intent.ToggleHex) }) {
-				Text(if (state.showHex) "Hide hex" else "Show hex")
+				AnimatedContent(
+					targetState = state.showHex,
+					label = "textAnimation"
+				) { showHex ->
+					Text(if (showHex) "Hide hex" else "Show hex")
+				}
 			}
 		}
 	}
@@ -97,6 +106,23 @@ private fun ColorSlider(
 			"${(value * 255).toInt()}",
 			style = MaterialTheme.typography.labelSmall,
 			modifier = Modifier.width(30.dp)
+		)
+	}
+}
+
+@Preview
+@Composable
+private fun ColorPickerContentPreview() {
+	Surface(modifier = Modifier.fillMaxWidth()) {
+		ColorPickerContent(
+			state = ColorPickerComponent.State(
+				red = 0.5f,
+				green = 0.3f,
+				blue = 0.8f,
+				label = "Pick a color",
+				showHex = true
+			),
+			dispatch = {}
 		)
 	}
 }
