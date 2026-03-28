@@ -10,7 +10,7 @@ fun main() = application {
 	Window(
 		onCloseRequest = ::exitApplication,
 		title = "Pulse Demo",
-		state = rememberWindowState(width = 400.dp, height = 600.dp)
+		state = rememberWindowState(width = 500.dp, height = 800.dp)
 	) {
 		MaterialTheme {
 			AppNavHost()

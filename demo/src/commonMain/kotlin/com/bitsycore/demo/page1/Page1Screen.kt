@@ -35,9 +35,6 @@ fun Page1Screen(
 	modifier: Modifier = Modifier,
 	viewModel: Page1ViewModel = viewModel { Page1ViewModel() }
 ) {
-	val state by viewModel.collectAsState()
-	val snackbarHostState = remember { SnackbarHostState() }
-
 	// Lifecycle intents — fires on each Android/desktop lifecycle transition
 	viewModel.onLifecycleIntent {
 		onCreate { Page1Contract.Intent.OnCreated }
@@ -55,6 +52,8 @@ fun Page1Screen(
 		onExit { Page1Contract.Intent.OnScreenExited }
 	}
 
+	val snackbarHostState = remember { SnackbarHostState() }
+
 	viewModel.collectEffect { effect ->
 		when (effect) {
 			is Page1Contract.Effect.ShowToast -> {
@@ -67,6 +66,8 @@ fun Page1Screen(
 			}
 		}
 	}
+
+	val state by viewModel.collectAsState()
 
 	Box(modifier.fillMaxSize()) {
 		MainContent(
