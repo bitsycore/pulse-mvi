@@ -39,7 +39,9 @@ kotlin {
 	// Windows
 	mingwX64 {
 		binaries {
-			staticLib()
+			staticLib {
+
+			}
 		}
 	}
 

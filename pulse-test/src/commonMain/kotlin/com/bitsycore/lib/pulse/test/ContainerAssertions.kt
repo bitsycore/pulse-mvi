@@ -1,10 +1,12 @@
 package com.bitsycore.lib.pulse.test
 
 import com.bitsycore.lib.pulse.container.ContainerHost
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -46,6 +48,8 @@ suspend fun <EFFECT : Any> ContainerHost<*, *, EFFECT>.collectEffects(
 		effectFlow.toList(effects)
 	}
 	block()
+	@OptIn(ExperimentalCoroutinesApi::class)
+	scope.advanceUntilIdle() // flush all pending coroutines (including nested launches from emitEffect)
 	job.cancel()
 	return effects
 }
