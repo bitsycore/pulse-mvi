@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bitsycore.demo.colorpicker.ColorPickerContent
 import com.bitsycore.lib.pulse.compose.collectAsState
@@ -33,7 +34,7 @@ import com.bitsycore.lib.pulse.compose.onLifecycleIntent
 @Composable
 fun Page1Screen(
 	modifier: Modifier = Modifier,
-	viewModel: Page1ViewModel = viewModel { Page1ViewModel() }
+	viewModel: Page1ViewModel = viewModel { Page1ViewModel(createSavedStateHandle()) }
 ) {
 	// Lifecycle intents — fires on each Android/desktop lifecycle transition
 	viewModel.onLifecycleIntent {

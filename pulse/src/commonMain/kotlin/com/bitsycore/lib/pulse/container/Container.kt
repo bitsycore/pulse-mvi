@@ -32,10 +32,11 @@ import kotlin.time.Duration
 abstract class Container<STATE : Any, INTENT : Any, EFFECT : Any>(
 	containerContract: ContainerContract<STATE, INTENT, EFFECT>,
 	val coroutineScope: CoroutineScope,
-	replayUnconsumed : Int = 4
+	replayUnconsumed: Int = 4,
+	restoredState: STATE? = null
 ) : ContainerHost<STATE, INTENT, EFFECT> {
 
-	private val stateMutableFlow = MutableStateFlow(containerContract.initialState)
+	private val stateMutableFlow = MutableStateFlow(restoredState ?: containerContract.initialState)
 	override val stateFlow: StateFlow<STATE> = stateMutableFlow.asStateFlow()
 
 	private val effectMutableFlow = MutableSharedFlow<Consumable<EFFECT>>(replay = replayUnconsumed, extraBufferCapacity = 8)

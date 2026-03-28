@@ -1,11 +1,13 @@
 package com.bitsycore.demo.colorpicker
 
 import com.bitsycore.lib.pulse.component.ComponentContract
+import kotlinx.serialization.Serializable
 
 object ColorPickerComponent : ComponentContract<ColorPickerComponent.State, ColorPickerComponent.Intent>() {
 
 	override val initialState = State()
 
+	@Serializable
 	data class State(
 		val red: Float = 0.5f,
 		val green: Float = 0.3f,

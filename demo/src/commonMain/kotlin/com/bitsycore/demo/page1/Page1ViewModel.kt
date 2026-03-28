@@ -1,11 +1,16 @@
 package com.bitsycore.demo.page1
 
+import androidx.lifecycle.SavedStateHandle
 import com.bitsycore.demo.colorpicker.ColorPickerComponent
 import com.bitsycore.demo.page1.Page1Contract.Effect
 import com.bitsycore.demo.page1.Page1Contract.Intent
 import com.bitsycore.demo.page1.Page1Contract.UiState
 
-class Page1ViewModel : Page1Contract.VM(Page1Contract) {
+class Page1ViewModel(savedStateHandle: SavedStateHandle) : Page1Contract.VM(
+	containerContract = Page1Contract,
+	savedStateHandle = savedStateHandle,
+	serializer = UiState.serializer()
+) {
 
 	override fun reduce(state: UiState, intent: Intent): UiState = when (intent) {
 		Intent.Increment -> state.copy(count = state.count + 1)
@@ -35,8 +40,8 @@ class Page1ViewModel : Page1Contract.VM(Page1Contract) {
 			Intent.OnCreated -> println("[Page1][Lifecycle] onCreate")
 			Intent.OnStarted -> {
 				emitEffect(Effect.ShowToast("onStart"))
-                println("[Page1][Lifecycle] onStart")
-            }
+				println("[Page1][Lifecycle] onStart")
+			}
 			Intent.OnResumed -> println("[Page1][Lifecycle] onResume")
 			Intent.OnPaused -> println("[Page1][Lifecycle] onPause")
 			Intent.OnStopped -> println("[Page1][Lifecycle] onStop")
@@ -49,7 +54,6 @@ class Page1ViewModel : Page1Contract.VM(Page1Contract) {
 			else -> {}
 		}
 	}
-
 
 	override fun onCleared() {
 		println("[Page1][ViewModel] onCleared")

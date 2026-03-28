@@ -2,14 +2,16 @@ package com.bitsycore.demo.page1
 
 import com.bitsycore.demo.colorpicker.ColorPickerComponent
 import com.bitsycore.lib.pulse.container.ContainerContract
-import com.bitsycore.lib.pulse.viewmodel.PulseViewModel
+import com.bitsycore.lib.pulse.savedstate.PulseSavedStateViewModel
+import kotlinx.serialization.Serializable
 
 object Page1Contract : ContainerContract<Page1Contract.UiState, Page1Contract.Intent, Page1Contract.Effect>() {
 
 	override val initialState = UiState()
 
-	typealias VM = PulseViewModel<UiState, Intent, Effect>
+	typealias VM = PulseSavedStateViewModel<UiState, Intent, Effect>
 
+	@Serializable
 	data class UiState(
 		val count: Int = 0,
 		val colorPicker: ColorPickerComponent.State = ColorPickerComponent.initialState,

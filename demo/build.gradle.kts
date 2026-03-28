@@ -5,6 +5,7 @@ plugins {
 	alias(libs.plugins.kotlin.multiplatform)
 	alias(libs.plugins.kotlin.compose)
 	alias(libs.plugins.compose.multiplatform)
+	alias(libs.plugins.kotlin.serialization)
 }
 
 val javaVersion: JavaVersion by rootProject.extra
@@ -22,6 +23,7 @@ kotlin {
 			implementation(project(":pulse"))
 			implementation(project(":pulse-viewmodel"))
 			implementation(project(":pulse-compose"))
+			implementation(project(":pulse-savedstate"))
 
 			implementation(libs.jetbrains.compose.material3)
 			implementation(libs.jetbrains.compose.foundation)
