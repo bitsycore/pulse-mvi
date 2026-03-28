@@ -35,3 +35,6 @@ rootProject.name = "PulseLib"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":pulse")
+include(":pulse-viewmodel")
+include(":pulse-compose")
+include(":demo")

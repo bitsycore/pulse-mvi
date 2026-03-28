@@ -17,8 +17,9 @@ import com.bitsycore.lib.pulse.scopes.ComposeIntentScope
 import com.bitsycore.lib.pulse.scopes.LifecycleIntentScope
 
 @Composable
-fun <STATE : Any, INTENT : Any, EFFECT : Any> ContainerHost<STATE, INTENT, EFFECT>.collectAsState(lifecycleState: Lifecycle.State = Lifecycle.State.STARTED) =
-	stateFlow.collectAsStateWithLifecycle(minActiveState = lifecycleState)
+fun <STATE : Any, INTENT : Any, EFFECT : Any> ContainerHost<STATE, INTENT, EFFECT>.collectAsState(
+	lifecycleState: Lifecycle.State = Lifecycle.State.STARTED
+) = stateFlow.collectAsStateWithLifecycle(minActiveState = lifecycleState)
 
 @Suppress("ComposableNaming")
 @Composable

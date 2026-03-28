@@ -35,7 +35,7 @@ abstract class Container<STATE : Any, INTENT : Any, EFFECT : Any>(
 	private val stateMutableFlow = MutableStateFlow(containerContract.initialState)
 	override val stateFlow: StateFlow<STATE> = stateMutableFlow.asStateFlow()
 
-	private val effectMutableFlow = MutableSharedFlow<EFFECT>(extraBufferCapacity = 16)
+	private val effectMutableFlow = MutableSharedFlow<EFFECT>(replay = 16, extraBufferCapacity = 16)
 	override val effectFlow: SharedFlow<EFFECT> = effectMutableFlow.asSharedFlow()
 
 	/** Entry point for all UI-originated actions. Thread-safe. */
