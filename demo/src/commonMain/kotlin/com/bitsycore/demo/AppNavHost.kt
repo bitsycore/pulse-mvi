@@ -53,9 +53,12 @@ fun AppNavHost() {
 				NavigationBarItem(
 					selected = backStack.lastOrNull() == route,
 					onClick = {
-						// Replace the whole stack with the selected tab
-						backStack.clear()
-						backStack.add(route)
+						// If already on this tab, do nothing
+						// Otherwise remove any existing instance and push on top
+						if (backStack.lastOrNull() != route) {
+							backStack.remove(route)
+							backStack.add(route)
+						}
 					},
 					icon = {},
 					label = { Text(label) }

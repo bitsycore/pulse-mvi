@@ -33,7 +33,7 @@ abstract class PulseSavedStateViewModel<STATE : Any, INTENT : Any, EFFECT : Any>
 	containerContract: ContainerContract<STATE, INTENT, EFFECT>,
 	private val savedStateHandle: SavedStateHandle,
 	private val serializer: KSerializer<STATE>,
-	private val savedStateKey: String = "pulse_state",
+	private val savedStateKey: String = "PulseSavedStateViewModel::${containerContract::class.qualifiedName}",
 	replayUnconsumed: Int = 4
 ) : PulseViewModel<STATE, INTENT, EFFECT>(
 	containerContract = containerContract,
