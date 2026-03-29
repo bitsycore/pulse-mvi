@@ -1,5 +1,5 @@
 ![](demoAndroid/src/main/res/mipmap-xxxhdpi/ic_launcher.webp)
-# Pulse MVI
+# Pulse : A minimal Kotlin Multiplatform MVI library
 
 A Kotlin Multiplatform MVI (Model-View-Intent) library. Minimal API surface, zero boilerplate, full coroutine integration.
 
