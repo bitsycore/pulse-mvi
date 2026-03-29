@@ -8,7 +8,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PulseMVI" >
         <activity
-            android:name=".MainActivity"
+            android:name="com.bitsycore.demo.pulse.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.PulseMVI" >
             <intent-filter>

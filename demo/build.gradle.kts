@@ -10,11 +10,8 @@ plugins {
 }
 
 val javaVersion = rootProject.extra["javaVersion"] as JavaVersion
-val useSnapshot: Boolean = providers.gradleProperty("pulse.useSnapshot").map { it.toBoolean() }.get()
 val pulseGroup: String = providers.gradleProperty("pulse.group").get()
 val baseVersion: String = providers.gradleProperty("pulse.version").get()
-// "+" suffix tells Gradle to resolve the latest matching version from mavenLocal
-val snapshotVersion = "$baseVersion-SNAPSHOT-+"
 
 kotlin {
 
@@ -48,16 +45,20 @@ kotlin {
 
 	sourceSets {
 		commonMain.dependencies {
-			if (useSnapshot) {
-				implementation("$pulseGroup:pulse:$snapshotVersion")
-				implementation("$pulseGroup:pulse-viewmodel:$snapshotVersion")
-				implementation("$pulseGroup:pulse-compose:$snapshotVersion")
-				implementation("$pulseGroup:pulse-savedstate:$snapshotVersion")
-			} else {
-				implementation(projects.pulse)
-				implementation(projects.pulseViewmodel)
-				implementation(projects.pulseCompose)
-				implementation(projects.pulseSavedstate)
+			providers.gradleProperty("pulse.demo.use").orNull.let { mode ->
+				listOf(
+					":pulse",
+					":pulse-viewmodel",
+					":pulse-compose",
+					":pulse-savedstate"
+				).forEach { lib ->
+					when (mode) {
+						"snapshot" -> implementation("$pulseGroup:$lib:$baseVersion-SNAPSHOT-+")
+						"release" -> implementation("$pulseGroup:$lib:$baseVersion")
+						"local" -> implementation(project(lib))
+						else -> error("Unknown pulse.demo.use=$mode")
+					}
+				}
 			}
 			implementation(libs.jetbrains.compose.material3)
 			implementation(libs.jetbrains.compose.foundation)
@@ -70,13 +71,23 @@ kotlin {
 		}
 
 		jvmMain.dependencies {
-			implementation(compose.desktop.currentOs)
+			if (providers.gradleProperty("pulse.demo.allDesktopPlatform").map { it.toBoolean() }.get()) {
+				implementation(libs.jetbrains.compose.desktop.jvm.windows.x64)
+				implementation(libs.jetbrains.compose.desktop.jvm.windows.arm64)
+				implementation(libs.jetbrains.compose.desktop.jvm.linux.x64)
+				implementation(libs.jetbrains.compose.desktop.jvm.linux.arm64)
+				implementation(libs.jetbrains.compose.desktop.jvm.macos.arm64)
+				implementation(libs.jetbrains.compose.desktop.jvm.macos.x64)
+			} else {
+				implementation(compose.desktop.currentOs)
+			}
 			implementation(libs.kotlinx.coroutines.swing)
 		}
 	}
 }
 
 compose.resources {
+	packageOfResClass = "com.bitsycore.demo.pulse.generated.resources"
 	publicResClass = false
 	generateResClass = auto
 }
@@ -85,9 +96,9 @@ compose.desktop {
 	application {
 		mainClass = "com.bitsycore.demo.pulse.MainKt"
 		nativeDistributions {
-			targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Exe, TargetFormat.Deb)
+			targetFormats(TargetFormat.AppImage)
 			packageName = "PulseDemo"
-			packageVersion = "1.0.0"
+			packageVersion = baseVersion
 		}
 	}
 }

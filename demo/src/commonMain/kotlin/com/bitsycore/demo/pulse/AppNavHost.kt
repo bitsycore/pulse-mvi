@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -94,7 +95,7 @@ fun AppNavHost() {
 
 		Row(
 			verticalAlignment = Alignment.CenterVertically,
-			modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+			modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
 		) {
 			var textHeight by remember { mutableIntStateOf(0) }
 			Image(
@@ -104,6 +105,7 @@ fun AppNavHost() {
 				modifier = Modifier
 					.heightIn(64.dp)
 					.height(with(LocalDensity.current) { textHeight.toDp() })
+					.background(Color.White, CircleShape)
 			)
 			Spacer(Modifier.width(16.dp))
 			Text(
