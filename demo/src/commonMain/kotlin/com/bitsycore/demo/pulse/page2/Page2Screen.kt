@@ -23,7 +23,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -60,13 +62,6 @@ fun Page2Screen(
 		onExit { Page2Contract.Intent.OnScreenExited }
 	}
 
-	LaunchedEffect(Unit) {
-		while (true) {
-			delay(1.seconds)
-			viewModel.dispatch(Page2Contract.Intent.Tick)
-		}
-	}
-
 	viewModel.collectEffect { effect ->
 		when (effect) {
 			is Page2Contract.Effect.ShowToast -> {
@@ -79,6 +74,15 @@ fun Page2Screen(
 			}
 		}
 	}
+
+
+	LaunchedEffect(Unit) {
+		while (true) {
+			delay(1.seconds)
+			viewModel.tick()
+		}
+	}
+
 
 	Page2Content(state, viewModel::dispatch)
 }
@@ -128,8 +132,9 @@ private fun Page2Content(state: Page2Contract.UiState, dispatch: (Page2Contract.
 @Preview
 @Composable
 private fun Page2Preview() {
+	var state by remember { mutableStateOf(Page2Contract.UiState()) }
 	Page2Content(
-		state = Page2Contract.UiState(),
-		dispatch = {  }
+		state = state,
+		dispatch = { state = Page2Contract.reduce(state, it) }
 	)
 }

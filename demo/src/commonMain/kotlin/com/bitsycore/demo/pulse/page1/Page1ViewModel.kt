@@ -38,12 +38,12 @@ class Page1ViewModel(savedStateHandle: SavedStateHandle) : Page1Contract.VM(
 		}
 	}
 
-	fun add() = dispatch {
+	fun add() = dispatchCustom {
         reduce {
             copy(count = count + 1)
         }
 		handle {
-			effect(Page1Contract.Effect.ShowToast("Counter incremented!"))
+			emitEffect(Page1Contract.Effect.ShowToast("Counter incremented!"))
 		}
     }
 

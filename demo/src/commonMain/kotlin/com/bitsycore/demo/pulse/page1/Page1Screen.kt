@@ -28,7 +28,9 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -78,10 +80,7 @@ fun Page1Screen(
 		}
 	}
 
-	Page1Content(
-		state = state,
-		dispatch = viewModel::dispatch
-	)
+	Page1Content(state = state, dispatch = viewModel::dispatch)
 }
 
 @Composable
@@ -149,8 +148,9 @@ private fun Page1Content(
 @Preview
 @Composable
 private fun Page1Preview() {
+	var state by remember { mutableStateOf(Page1Contract.UiState()) }
 	Page1Content(
-		state = Page1Contract.UiState(),
-		dispatch = {  }
+		state = state,
+		dispatch = { state = Page1Contract.reduce(state, it) }
 	)
 }

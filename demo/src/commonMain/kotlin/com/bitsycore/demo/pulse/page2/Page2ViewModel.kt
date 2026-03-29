@@ -25,9 +25,18 @@ class Page2ViewModel : Page2Contract.VM(Page2Contract) {
 			// Log all composition events
 			Page2Contract.Intent.OnScreenEntered -> println("[Page2][Composition] onEnter")
 			Page2Contract.Intent.OnScreenExited -> println("[Page2][Composition] onExit")
-			else -> {}
         }
 	}
 
 	override fun onCleared() = println("[Page2][ViewModel] onCleared")
+
+	fun tick() = dispatchCustom {
+		reduce {
+			copy(count = count + 1)
+		}
+		handle {
+			if (stateFlow.value.count % 5 == 0)
+				emitEffect(Page2Contract.Effect.ShowToast("Counter incremented!"))
+		}
+	}
 }
