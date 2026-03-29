@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 class UntypedIntentBuilderScope<STATE : Any, EFFECT : Any> internal constructor(
 	private val stateFlow: MutableStateFlow<STATE>,
 	private val coroutineScope: CoroutineScope,
-	private val emitEffectDelegate: suspend (EFFECT) -> Unit,
+	emitEffectDelegate: suspend (EFFECT) -> Unit,
 ) {
 
 	class EffectEmitterScope<EFFECT : Any> internal constructor(

@@ -1,10 +1,10 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Demo JVM" type="GradleRunConfiguration" factoryName="Gradle">
+  <configuration default="false" name="Demo (Snapshot)" type="GradleRunConfiguration" factoryName="Gradle">
     <ExternalSystemSettings>
       <option name="executionName" />
       <option name="externalProjectPath" value="$PROJECT_DIR$/demo" />
       <option name="externalSystemIdString" value="GRADLE" />
-      <option name="scriptParameters" value="-DmainClass=com.bitsycore.demo.pulse.MainKt --quiet" />
+      <option name="scriptParameters" value="-DmainClass=com.bitsycore.demo.pulse.MainKt --quiet -Dpulse.demo.use=snapshot" />
       <option name="taskDescriptions">
         <list />
       </option>
@@ -26,6 +26,8 @@
     <RunAsTest>false</RunAsTest>
     <GradleProfilingDisabled>false</GradleProfilingDisabled>
     <GradleCoverageDisabled>false</GradleCoverageDisabled>
-    <method v="2" />
+    <method v="2">
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Snapshot to MavenLocal" run_configuration_type="GradleRunConfiguration" />
+    </method>
   </configuration>
 </component>
