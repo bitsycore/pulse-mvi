@@ -24,6 +24,7 @@ kotlin {
 		compilerOptions {
 			jvmTarget = JvmTarget.fromTarget(javaVersion.toString())
 		}
+		androidResources.enable = true
 	}
 
 	// ================================
@@ -53,6 +54,7 @@ kotlin {
 			implementation(libs.jetbrains.androidx.navigation3.ui)
 			implementation(libs.jetbrains.androidx.lifecycle.viewmodel.navigation3)
 			implementation(libs.jetbrains.compose.ui.tooling.preview)
+			implementation(libs.jetbrains.compose.components.resources)
 		}
 
 		jvmMain.dependencies {
@@ -60,6 +62,11 @@ kotlin {
 			implementation(libs.kotlinx.coroutines.swing)
 		}
 	}
+}
+
+compose.resources {
+	publicResClass = false
+	generateResClass = auto
 }
 
 compose.desktop {
