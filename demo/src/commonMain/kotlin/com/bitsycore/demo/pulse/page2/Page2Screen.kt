@@ -59,6 +59,11 @@ fun Page2Screen(
 		}
 	}
 
+	Page2Content(state, viewModel::dispatch)
+}
+
+@Composable
+private fun Page2Content(state: Page2Contract.UiState, dispatch: (Page2Contract.Intent) -> Unit) {
 	Column(
 		modifier = Modifier.fillMaxSize()
 			.background(MaterialTheme.colorScheme.background)

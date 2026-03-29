@@ -77,14 +77,14 @@ fun Page1Screen(
 		}
 	}
 
-	MainContent(
+	Page1Content(
 		state = state,
 		dispatch = viewModel::dispatch
 	)
 }
 
 @Composable
-private fun MainContent(
+private fun Page1Content(
 	state: Page1Contract.UiState,
 	dispatch: (Page1Contract.Intent) -> Unit
 ) {
