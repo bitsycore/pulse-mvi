@@ -15,6 +15,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.bitsycore.lib.pulse.container.ContainerHost
 import com.bitsycore.lib.pulse.scopes.ComposeIntentScope
 import com.bitsycore.lib.pulse.scopes.LifecycleIntentScope
+import com.bitsycore.lib.pulse.scopes.PulseScopeDsl
 
 @Composable
 fun <STATE : Any, INTENT : Any, EFFECT : Any> ContainerHost<STATE, INTENT, EFFECT>.collectAsState(
@@ -38,6 +39,7 @@ fun <STATE : Any, INTENT : Any, EFFECT : Any> ContainerHost<STATE, INTENT, EFFEC
 
 @Suppress("ComposableNaming")
 @Composable
+@PulseScopeDsl
 fun <STATE : Any, INTENT : Any, EFFECT : Any> ContainerHost<STATE, INTENT, EFFECT>.onLifecycleIntent(
 	lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
 	mapper: LifecycleIntentScope<INTENT>.() -> Unit
@@ -79,6 +81,7 @@ fun <STATE : Any, INTENT : Any, EFFECT : Any> ContainerHost<STATE, INTENT, EFFEC
 
 @Suppress("ComposableNaming")
 @Composable
+@PulseScopeDsl
 fun <STATE : Any, INTENT : Any, EFFECT : Any> ContainerHost<STATE, INTENT, EFFECT>.onCompositionIntent(
 	key1: Any? = Unit,
 	vararg keys: Any?,
