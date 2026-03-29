@@ -8,6 +8,8 @@ plugins {
 	alias(libs.plugins.compose.multiplatform)
 }
 
+apply(from = rootProject.file("gradle/publish.gradle.kts"))
+
 val javaVersion: JavaVersion by rootProject.extra
 
 kotlin {

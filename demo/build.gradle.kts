@@ -9,7 +9,12 @@ plugins {
 	alias(libs.plugins.android.kotlin.multiplatform.library)
 }
 
-val javaVersion: JavaVersion by rootProject.extra
+val javaVersion = rootProject.extra["javaVersion"] as JavaVersion
+val useSnapshot: Boolean = providers.gradleProperty("pulse.useSnapshot").map { it.toBoolean() }.get()
+val pulseGroup: String = providers.gradleProperty("pulse.group").get()
+val baseVersion: String = providers.gradleProperty("pulse.version").get()
+// "+" suffix tells Gradle to resolve the latest matching version from mavenLocal
+val snapshotVersion = "$baseVersion-SNAPSHOT-+"
 
 kotlin {
 
@@ -43,10 +48,17 @@ kotlin {
 
 	sourceSets {
 		commonMain.dependencies {
-			implementation(projects.pulse)
-			implementation(projects.pulseViewmodel)
-			implementation(projects.pulseCompose)
-			implementation(projects.pulseSavedstate)
+			if (useSnapshot) {
+				implementation("$pulseGroup:pulse:$snapshotVersion")
+				implementation("$pulseGroup:pulse-viewmodel:$snapshotVersion")
+				implementation("$pulseGroup:pulse-compose:$snapshotVersion")
+				implementation("$pulseGroup:pulse-savedstate:$snapshotVersion")
+			} else {
+				implementation(projects.pulse)
+				implementation(projects.pulseViewmodel)
+				implementation(projects.pulseCompose)
+				implementation(projects.pulseSavedstate)
+			}
 			implementation(libs.jetbrains.compose.material3)
 			implementation(libs.jetbrains.compose.foundation)
 			implementation(libs.jetbrains.compose.ui)
@@ -73,7 +85,7 @@ compose.desktop {
 	application {
 		mainClass = "com.bitsycore.demo.pulse.MainKt"
 		nativeDistributions {
-			targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+			targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Exe, TargetFormat.Deb)
 			packageName = "PulseDemo"
 			packageVersion = "1.0.0"
 		}
