@@ -55,8 +55,6 @@ A contract declares the state, intents, and effects for a screen. It is the sing
 ```kotlin
 object CounterContract : ContainerContract<CounterContract.UiState, CounterContract.Intent, CounterContract.Effect>() {
 
-    override val initialState = UiState()
-
     data class UiState(
         val count: Int = 0,
     )
@@ -79,6 +77,9 @@ The ViewModel holds the container, defines state reductions, and handles side-ef
 
 ```kotlin
 class CounterViewModel : PulseViewModel<UiState, Intent, Effect>(CounterContract) {
+
+    override val initialState: UiState
+        get() = UiState()
 
     override fun reduce(state: UiState, intent: Intent): UiState = when (intent) {
         Intent.Increment -> state.copy(count = state.count + 1)
@@ -144,12 +145,10 @@ flowchart LR
 
 ### ContainerContract
 
-Groups the three MVI types into a single object. Provides the initial state.
+Groups the three MVI types into a single object. Does not hold state — `initialState` is provided by the ViewModel.
 
 ```kotlin
-object MyContract : ContainerContract<MyState, MyIntent, MyEffect>() {
-    override val initialState = MyState()
-}
+object MyContract : ContainerContract<MyState, MyIntent, MyEffect>()
 ```
 
 ### ContainerHost
@@ -177,6 +176,8 @@ Wraps `Container` in an AndroidX `ViewModel`. The container's coroutine scope is
 
 ```kotlin
 class MyViewModel : PulseViewModel<MyState, MyIntent, MyEffect>(MyContract) {
+    override val initialState: MyState
+        get() = MyState()
     override fun reduce(state: MyState, intent: MyIntent): MyState = ...
     override suspend fun handleIntent(intent: MyIntent) { ... }
 }
@@ -196,6 +197,8 @@ class MyViewModel(savedStateHandle: SavedStateHandle) :
         savedStateHandle = savedStateHandle,
         serializer = UiState.serializer()
     ) {
+    override val initialState: UiState
+        get() = UiState()
     override fun reduce(state: UiState, intent: Intent): UiState = ...
 }
 ```
@@ -291,7 +294,6 @@ Embed in a parent contract:
 
 ```kotlin
 object PageContract : ContainerContract<PageContract.UiState, PageContract.Intent, PageContract.Effect>() {
-    override val initialState = UiState()
 
     data class UiState(
         val title: String = "",
@@ -342,6 +344,7 @@ viewModel.dispatchDebounced(Intent.Search(query), delay = 300.milliseconds, shar
 ```kotlin
 @Test
 fun incrementUpdatesCount() = CounterContract.containerTest(
+    initialState = CounterContract.UiState(),
     reduce = { state, intent ->
         when (intent) {
             Intent.Increment -> state.copy(count = state.count + 1)
@@ -364,6 +367,7 @@ fun incrementUpdatesCount() = CounterContract.containerTest(
 ```kotlin
 @Test
 fun resetEmitsToast() = CounterContract.containerTest(
+    initialState = CounterContract.UiState(),
     handleIntent = { intent ->
         when (intent) {
             Intent.Reset -> emitEffect(Effect.ShowToast("Counter reset"))
@@ -385,6 +389,7 @@ fun resetEmitsToast() = CounterContract.containerTest(
 fun multipleEffects() = runTest {
     val container = TestContainer(
         contract = CounterContract,
+        initialState = CounterContract.UiState(),
         testScope = this,
         intentHandler = { intent ->
             when (intent) {

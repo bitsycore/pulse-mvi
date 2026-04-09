@@ -37,8 +37,8 @@ demo → pulse-compose     → pulse
 
 ## MVI Pattern
 
-- **ContainerContract** — declares `STATE`, `INTENT`, `EFFECT` types + `initialState`
-- **Container** — core engine: `dispatch(intent)` → `reduce()` → new state; `handleIntent()` for async side-effects; `emitEffect()` for one-shot events; supports `restoredState` for state restoration
+- **ContainerContract** — declares `STATE`, `INTENT`, `EFFECT` types (no `initialState`; state is provided by the Container/ViewModel)
+- **Container** — core engine: takes `initialState` as constructor parameter; `dispatch(intent)` → `reduce()` → new state; `handleIntent()` for async side-effects; `emitEffect()` for one-shot events; supports `restoredState` for state restoration
 - **ContainerHost** — interface exposing `stateFlow`, `effectFlow`, `dispatch`, `dispatchDebounced`
 - **OneTimeConsumable** — thread-safe one-shot wrapper for effect replay without double-delivery
 - **ComponentContract** — lightweight sub-container with its own reducer (no effects)
@@ -69,9 +69,15 @@ fun XContent(state: UiState, dispatch: (Intent) -> Unit) {
 @Serializable
 data class UiState(val count: Int = 0)
 
-class MyViewModel(savedStateHandle: SavedStateHandle) : PulseSavedStateViewModel<UiState, Intent, Effect>(
-    MyContract, savedStateHandle, UiState.serializer()
-)
+class MyViewModel(savedStateHandle: SavedStateHandle) :
+    PulseSavedStateViewModel<UiState, Intent, Effect>(
+        containerContract = MyContract,
+        savedStateHandle = savedStateHandle,
+        serializer = UiState.serializer()
+    ) {
+    override val initialState: UiState
+        get() = UiState()
+}
 
 // In Compose:
 viewModel { MyViewModel(createSavedStateHandle()) }
@@ -81,6 +87,7 @@ viewModel { MyViewModel(createSavedStateHandle()) }
 
 ```kotlin
 MyContract.containerTest(
+    initialState = MyContract.UiState(),
     reduce = { state, intent -> /* ... */ }
 ) {
     dispatch(MyIntent.Increment)
