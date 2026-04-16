@@ -34,6 +34,7 @@ abstract class PulseViewModel<STATE : Any, INTENT : Any, EFFECT : Any>(
 		container.dispatch(intent)
 	}
 
+	@ExperimentalPulse
 	override fun dispatchDebounced(intent: INTENT, delay: Duration, key: String?, skipIfUnchanged: Boolean, shareAcrossTypes: Boolean) =
 		container.dispatchDebounced(intent, delay, key, skipIfUnchanged, shareAcrossTypes)
 
