@@ -1,0 +1,83 @@
+# Publishes the Pulse library modules to GitHub Packages whenever a version
+# tag (e.g. 0.3.5) is pushed. The pushed tag is the single source of truth for
+# the published version.
+name: Publish
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'      # 0.3.5
+      - 'v[0-9]+.[0-9]+.[0-9]+'     # v0.3.5 (optional 'v' prefix is stripped)
+  # Allow a manual run from the Actions tab, supplying the version explicitly.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g. 0.3.5)'
+        required: true
+        type: string
+
+# Never run two publishes for the same ref at once, and don't cancel a publish
+# that is already in flight.
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    # Ubuntu cross-compiles every target from one job. A KMP *library* publishes
+    # klibs, and Kotlin/Native compiles Apple-target klibs on any host (these
+    # modules have no Apple-framework cinterop). Only linking final iOS
+    # .framework binaries would require macOS — publishing klibs does not.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write              # lets the built-in GITHUB_TOKEN push packages
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # JDK 21 / Temurin matches gradle/gradle-daemon-jvm.properties so Gradle
+      # does not try to auto-provision a different daemon JVM.
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # The repo ships only gradle-wrapper.jar (no gradlew script), so provision
+      # the matching Gradle version directly instead of calling ./gradlew.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.4.1'
+
+      # Resolve the version from the tag (push) or the manual input (dispatch).
+      - name: Resolve version
+        id: version
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"   # strip an optional leading 'v'
+          else
+            VERSION="${{ inputs.version }}"
+          fi
+          if [ -z "$VERSION" ]; then
+            echo "::error::No version could be resolved." && exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Publishing version: $VERSION"
+
+      # Publish only to the remote GitHub Packages repository (not mavenLocal).
+      # The URL is pinned to the canonical repo name so the GITHUB_TOKEN scope
+      # always matches the publish target.
+      - name: Publish to GitHub Packages
+        env:
+          PULSE_MAVEN_USERNAME: ${{ github.actor }}
+          PULSE_MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          gradle publishAllPublicationsToRemoteRepository
+          -Ppulse.version=${{ steps.version.outputs.version }}
+          -Ppulse.snapshot=false
+          -Ppulse.maven.url=https://maven.pkg.github.com/${{ github.repository }}
+          --no-configuration-cache
+          --stacktrace
