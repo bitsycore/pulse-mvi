@@ -28,19 +28,29 @@ pulse-test        --> pulse
 
 ## Installation
 
-Add the modules you need to your `build.gradle.kts`:
+Add the repository (in `settings.gradle.kts` or your repositories block):
+
+```kotlin
+repositories {
+    maven("https://maven.bitsycore.com/releases")
+}
+```
+
+(Artifacts are also published to GitHub Packages, which requires authentication.)
+
+Then add the modules you need to your `build.gradle.kts`:
 
 ```kotlin
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("com.bitsycore:pulse:<version>")
-            implementation("com.bitsycore:pulse-viewmodel:<version>")
-            implementation("com.bitsycore:pulse-compose:<version>")
-            implementation("com.bitsycore:pulse-savedstate:<version>")
+            implementation("com.bitsycore.lib:pulse:<version>")
+            implementation("com.bitsycore.lib:pulse-viewmodel:<version>")
+            implementation("com.bitsycore.lib:pulse-compose:<version>")
+            implementation("com.bitsycore.lib:pulse-savedstate:<version>")
         }
         commonTest.dependencies {
-            implementation("com.bitsycore:pulse-test:<version>")
+            implementation("com.bitsycore.lib:pulse-test:<version>")
         }
     }
 }

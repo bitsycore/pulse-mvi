@@ -81,3 +81,18 @@ jobs:
           -Ppulse.maven.url=https://maven.pkg.github.com/${{ github.repository }}
           --no-configuration-cache
           --stacktrace
+
+      # Same publications, second target: the self-hosted Reposilite instance.
+      # Credentials are a write-only token scoped to /releases + /snapshots
+      # (repo secrets BITSYCORE_MAVEN_USER / BITSYCORE_MAVEN_TOKEN).
+      - name: Publish to maven.bitsycore.com
+        env:
+          PULSE_MAVEN_USERNAME: ${{ secrets.BITSYCORE_MAVEN_USER }}
+          PULSE_MAVEN_PASSWORD: ${{ secrets.BITSYCORE_MAVEN_TOKEN }}
+        run: >
+          gradle publishAllPublicationsToRemoteRepository
+          -Ppulse.version=${{ steps.version.outputs.version }}
+          -Ppulse.snapshot=false
+          -Ppulse.maven.url=https://maven.bitsycore.com/releases
+          --no-configuration-cache
+          --stacktrace
