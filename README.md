@@ -36,7 +36,19 @@ repositories {
 }
 ```
 
-(Artifacts are also published to GitHub Packages, which requires authentication.)
+Artifacts are also published to [GitHub Packages](https://github.com/bitsycore/pulse-mvi/packages)
+as a fallback. Note that GitHub Packages requires authentication, even for public packages:
+
+```kotlin
+repositories {
+    maven("https://maven.pkg.github.com/bitsycore/pulse-mvi") {
+        credentials {
+            username = providers.gradleProperty("gpr.user").orNull ?: System.getenv("GITHUB_ACTOR")
+            password = providers.gradleProperty("gpr.token").orNull ?: System.getenv("GITHUB_TOKEN")
+        }
+    }
+}
+```
 
 Then add the modules you need to your `build.gradle.kts`:
 
