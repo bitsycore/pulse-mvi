@@ -2,10 +2,11 @@ package com.bitsycore.lib.pulse.container
 
 import com.bitsycore.lib.pulse.internal.ExperimentalPulse
 import com.bitsycore.lib.pulse.internal.UntypedIntentBuilder
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.yield
 
 /**
  * Core MVI engine.
@@ -28,13 +29,24 @@ abstract class Container<STATE : Any, INTENT : Any, EFFECT : Any>(
 	private val stateMutableFlow = MutableStateFlow(restoredState ?: initialState)
 	override val stateFlow: StateFlow<STATE> = stateMutableFlow.asStateFlow()
 
-	private val effectMutableFlow = MutableSharedFlow<EFFECT>(extraBufferCapacity = 8)
-	override val effectFlow: Flow<EFFECT> = effectMutableFlow.asSharedFlow()
+	// Channel-backed so effects emitted while no collector is subscribed (e.g. during
+	// a configuration change) are buffered and delivered on resubscription instead of
+	// being silently dropped. Effects are consumed by a single collector.
+	private val effectChannel = Channel<EFFECT>(Channel.UNLIMITED)
+	override val effectFlow: Flow<EFFECT> = effectChannel.receiveAsFlow()
 
 	/** Entry point for all UI-originated actions. Thread-safe. */
 	override fun dispatch(intent: INTENT) {
 		stateMutableFlow.update { reduce(it, intent) }
-		coroutineScope.launch { handleIntent(intent) }
+		coroutineScope.launch {
+			try {
+				handleIntent(intent)
+			} catch (vCancellation: CancellationException) {
+				throw vCancellation
+			} catch (vError: Throwable) {
+				onError(intent, vError)
+			}
+		}
 	}
 
 	@ExperimentalPulse
@@ -51,9 +63,16 @@ abstract class Container<STATE : Any, INTENT : Any, EFFECT : Any>(
 	/** Long operation handler. Override to perform async work (network, NFC, etc.). */
 	protected open suspend fun handleIntent(intent: INTENT) {}
 
-	/** Emits a one-time effect to the screen. Thread-safe */
+	/**
+	 * Called when [handleIntent] throws (except [CancellationException]).
+	 * Default rethrows, preserving fail-fast behaviour — override to report the
+	 * error and keep the container alive (e.g. emit an error state or effect).
+	 */
+	protected open fun onError(intent: INTENT, error: Throwable): Unit = throw error
+
+	/** Emits a one-time effect to the screen. Thread-safe, never drops the effect. */
 	fun emitEffect(effect: EFFECT) {
-		coroutineScope.launch { yield(); effectMutableFlow.emit(effect) }
+		effectChannel.trySend(effect)
 	}
 
 	/** Convenience for updating state outside of the reducer (e.g., inside callbacks). */

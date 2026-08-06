@@ -65,21 +65,29 @@ class DebouncedDispatcher<INTENT : Any>(
 				else -> intent::class
 			}
 
-			val shouldSkip = mutex.withLock {
-				skipIfUnchanged && lastIntents[debounceKey] == intent
-			}
-
-			if (shouldSkip) return@launch
-
+			// Skip-check, cancellation of the previous job and registration of the new
+			// one happen under a single lock acquisition, so two concurrent calls can
+			// never interleave between those steps.
 			mutex.withLock {
+				if (skipIfUnchanged && lastIntents[debounceKey] == intent) return@launch
+
 				debounceJobs[debounceKey]?.cancel()
 				val job = launch {
 					delay(clampedDelay)
-					dispatch(intent)
-					mutex.withLock {
-						lastIntents[debounceKey] = intent
-						debounceJobs.remove(debounceKey)
+					// Dispatch only if this job is still the registered owner of the key.
+					// A newer call may have cancelled us between the end of the delay and
+					// this point — cancellation alone cannot interrupt non-suspending code,
+					// so the ownership check is what prevents a stale dispatch.
+					val vIsOwner = mutex.withLock {
+						if (debounceJobs[debounceKey] === coroutineContext[Job]) {
+							lastIntents[debounceKey] = intent
+							debounceJobs.remove(debounceKey)
+							true
+						} else {
+							false
+						}
 					}
+					if (vIsOwner) dispatch(intent)
 				}
 				debounceJobs[debounceKey] = job
 			}
