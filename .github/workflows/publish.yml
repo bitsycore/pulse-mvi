@@ -30,7 +30,7 @@ jobs:
     # .framework binaries would require macOS — publishing klibs does not.
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write              # create the GitHub release after publishing
       packages: write              # lets the built-in GITHUB_TOKEN push packages
 
     steps:
@@ -96,3 +96,19 @@ jobs:
           -Ppulse.maven.url=https://maven.bitsycore.com/releases
           --no-configuration-cache
           --stacktrace
+
+      # Create the GitHub release once both publishes succeeded (skipped if the
+      # release already exists, e.g. it was created by hand beforehand).
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if gh release view "$VERSION" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "Release $VERSION already exists — skipping."
+          else
+            gh release create "$VERSION" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$VERSION" \
+              --generate-notes
+          fi
