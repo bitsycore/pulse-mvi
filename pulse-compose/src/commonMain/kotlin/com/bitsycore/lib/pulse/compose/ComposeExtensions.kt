@@ -107,7 +107,7 @@ fun <STATE : Any, INTENT : Any, EFFECT : Any> ContainerHost<STATE, INTENT, EFFEC
 	val enterRef = rememberUpdatedState(scope.onEnter)
 	val exitRef = rememberUpdatedState(scope.onExit)
 
-	// Always composed — unconditional
+	// Always composed - unconditional
 	LaunchedEffect(key1, *keys) {
 		enterRef.value?.invoke()
 	}

@@ -65,7 +65,7 @@ abstract class Container<STATE : Any, INTENT : Any, EFFECT : Any>(
 
 	/**
 	 * Called when [handleIntent] throws (except [CancellationException]).
-	 * Default rethrows, preserving fail-fast behaviour — override to report the
+	 * Default rethrows, preserving fail-fast behaviour - override to report the
 	 * error and keep the container alive (e.g. emit an error state or effect).
 	 */
 	protected open fun onError(intent: INTENT, error: Throwable): Unit = throw error

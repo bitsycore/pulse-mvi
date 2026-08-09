@@ -5,11 +5,11 @@ Kotlin Multiplatform MVI (Model-View-Intent) library.
 ## Project Structure
 
 ```
-pulse/              Core MVI container — pure Kotlin + coroutines (JVM, Android, iOS, JS, WasmJS)
+pulse/              Core MVI container - pure Kotlin + coroutines (JVM, Android, iOS, JS, WasmJS)
 pulse-viewmodel/    AndroidX ViewModel integration (JVM, Android, iOS, JS, WasmJS)
-pulse-savedstate/   SavedStateHandle integration — auto-persist state (JVM, Android, iOS, JS, WasmJS)
+pulse-savedstate/   SavedStateHandle integration - auto-persist state (JVM, Android, iOS, JS, WasmJS)
 pulse-compose/      Compose Multiplatform extensions (JVM, Android, iOS, JS, WasmJS)
-pulse-test/         Testing utilities — TestContainer + assertions (JVM, Android, iOS, JS, WasmJS)
+pulse-test/         Testing utilities - TestContainer + assertions (JVM, Android, iOS, JS, WasmJS)
 demo/               Desktop demo app (JVM)
 ```
 
@@ -21,7 +21,7 @@ demo → pulse-compose     → pulse
      → pulse-test        → pulse
 ```
 
-`pulse` has zero UI dependencies — only `kotlinx-coroutines-core`.
+`pulse` has zero UI dependencies - only `kotlinx-coroutines-core`.
 
 ## Build Commands
 
@@ -37,15 +37,15 @@ demo → pulse-compose     → pulse
 
 ## MVI Pattern
 
-- **ContainerContract** — declares `STATE`, `INTENT`, `EFFECT` types (no `initialState`; state is provided by the Container/ViewModel)
-- **Container** — core engine: takes `initialState` as constructor parameter; `dispatch(intent)` → `reduce()` → new state; `handleIntent()` for async side-effects; `emitEffect()` for one-shot events; supports `restoredState` for state restoration
-- **ContainerHost** — interface exposing `stateFlow`, `effectFlow`, `dispatch`
-- **DebouncedDispatcher** — standalone debounce engine: `dispatchDebounced()`, `cancel(key)`, `cancelAll()`, `clearHistory()`; thread-safe, composable with any dispatch function
-- **ComponentContract** — lightweight sub-container with its own reducer (no effects)
-- **PulseViewModel** — AndroidX ViewModel wrapper around Container
-- **PulseSavedStateViewModel** — PulseViewModel + SavedStateHandle auto-persistence (STATE must be `@Serializable`)
-- **ComposeExtensions** — `collectAsStateWithLifecycle()`, `collectEffect()`, `collectEffectWithLifecycle()`, `onLifecycleIntent()`, `onCompositionIntent()`
-- **TestContainer** — test-friendly Container with `UnconfinedTestDispatcher`
+- **ContainerContract** - declares `STATE`, `INTENT`, `EFFECT` types (no `initialState`; state is provided by the Container/ViewModel)
+- **Container** - core engine: takes `initialState` as constructor parameter; `dispatch(intent)` → `reduce()` → new state; `handleIntent()` for async side-effects; `emitEffect()` for one-shot events; supports `restoredState` for state restoration
+- **ContainerHost** - interface exposing `stateFlow`, `effectFlow`, `dispatch`
+- **DebouncedDispatcher** - standalone debounce engine: `dispatchDebounced()`, `cancel(key)`, `cancelAll()`, `clearHistory()`; thread-safe, composable with any dispatch function
+- **ComponentContract** - lightweight sub-container with its own reducer (no effects)
+- **PulseViewModel** - AndroidX ViewModel wrapper around Container
+- **PulseSavedStateViewModel** - PulseViewModel + SavedStateHandle auto-persistence (STATE must be `@Serializable`)
+- **ComposeExtensions** - `collectAsStateWithLifecycle()`, `collectEffect()`, `collectEffectWithLifecycle()`, `onLifecycleIntent()`, `onCompositionIntent()`
+- **TestContainer** - test-friendly Container with `UnconfinedTestDispatcher`
 
 ## Screen Pattern (Compose)
 
@@ -59,7 +59,7 @@ fun XScreen(viewModel: XViewModel = viewModel { XViewModel() }) {
 
 @Composable
 fun XContent(state: UiState, dispatch: (Intent) -> Unit) {
-    // Pure UI — no ViewModel reference
+    // Pure UI - no ViewModel reference
 }
 ```
 

@@ -156,7 +156,7 @@ flowchart LR
 
 ### DebouncedDispatcher
 
-Standalone debounce engine for rate-limiting rapid input. Not embedded in `Container` — create one and wire it to any dispatch function.
+Standalone debounce engine for rate-limiting rapid input. Not embedded in `Container` - create one and wire it to any dispatch function.
 
 - `dispatchDebounced(intent, delay)` -- Dispatches after a debounce window. Configurable debounce key, skip-if-unchanged, and cross-type sharing.
 - `cancel(key)` -- Cancels a pending debounce by key and clears its dispatch history.
@@ -165,7 +165,7 @@ Standalone debounce engine for rate-limiting rapid input. Not embedded in `Conta
 
 ### ContainerContract
 
-Groups the three MVI types into a single object. Does not hold state — `initialState` is provided by the ViewModel.
+Groups the three MVI types into a single object. Does not hold state - `initialState` is provided by the ViewModel.
 
 ```kotlin
 object MyContract : ContainerContract<MyState, MyIntent, MyEffect>()
@@ -185,7 +185,7 @@ interface ContainerHost<STATE, INTENT, EFFECT> {
 
 ### Effects
 
-Effects are emitted via `emitEffect()` and delivered through a `SharedFlow`. They are fire-and-forget one-shot events — each effect is delivered to active collectors only. Effects are not replayed to late subscribers. Use `collectEffect` or `collectEffectWithLifecycle` in Compose to handle them.
+Effects are emitted via `emitEffect()` and delivered through a `SharedFlow`. They are fire-and-forget one-shot events - each effect is delivered to active collectors only. Effects are not replayed to late subscribers. Use `collectEffect` or `collectEffectWithLifecycle` in Compose to handle them.
 
 ## ViewModel integration
 
@@ -337,7 +337,7 @@ override fun reduce(state: UiState, intent: Intent): UiState = when (intent) {
 
 ## Debouncing
 
-`DebouncedDispatcher` is a standalone debounce engine. Create one and wire it to any dispatch function — typically inside a ViewModel.
+`DebouncedDispatcher` is a standalone debounce engine. Create one and wire it to any dispatch function - typically inside a ViewModel.
 
 ### Setup
 

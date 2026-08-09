@@ -8,7 +8,7 @@ import kotlinx.coroutines.launch
 /**
  * DSL scope available inside [com.bitsycore.lib.pulse.container.Container.dispatchCustom] blocks.
  *
- * [reduce] and [handle] are declarative — only the **last** definition of each
+ * [reduce] and [handle] are declarative - only the **last** definition of each
  * is executed, and both run at the end of the block (reduce first, then handle).
  *
  * ```kotlin

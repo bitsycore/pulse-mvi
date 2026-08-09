@@ -76,7 +76,7 @@ class DebouncedDispatcher<INTENT : Any>(
 					delay(clampedDelay)
 					// Dispatch only if this job is still the registered owner of the key.
 					// A newer call may have cancelled us between the end of the delay and
-					// this point — cancellation alone cannot interrupt non-suspending code,
+					// this point - cancellation alone cannot interrupt non-suspending code,
 					// so the ownership check is what prevents a stale dispatch.
 					val vIsOwner = mutex.withLock {
 						if (debounceJobs[debounceKey] === coroutineContext[Job]) {

@@ -30,7 +30,7 @@ project.afterEvaluate {
 		publications.withType<MavenPublication>().configureEach {
 			pom {
 				name.set(project.name)
-				description.set("Pulse MVI — ${project.name}")
+				description.set("Pulse MVI - ${project.name}")
 				url.set("https://github.com/bitsycore/PulseMVI")
 				licenses {
 					license {

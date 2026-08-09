@@ -217,7 +217,7 @@ class ContainerTest {
 			}
 		)
 
-		// Dispatch then collect — first subscriber gets it
+		// Dispatch then collect - first subscriber gets it
 		container.dispatch(CounterContract.Intent.Reset)
 		val effect1 = container.effectFlow.first()
 		assertEquals(CounterContract.Effect.ShowToast("once"), effect1)

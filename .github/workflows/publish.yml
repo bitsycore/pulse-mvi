@@ -27,7 +27,7 @@ jobs:
     # Ubuntu cross-compiles every target from one job. A KMP *library* publishes
     # klibs, and Kotlin/Native compiles Apple-target klibs on any host (these
     # modules have no Apple-framework cinterop). Only linking final iOS
-    # .framework binaries would require macOS — publishing klibs does not.
+    # .framework binaries would require macOS - publishing klibs does not.
     runs-on: ubuntu-latest
     permissions:
       contents: write              # create the GitHub release after publishing
@@ -105,7 +105,7 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           if gh release view "$VERSION" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
-            echo "Release $VERSION already exists — skipping."
+            echo "Release $VERSION already exists - skipping."
           else
             gh release create "$VERSION" \
               --repo "$GITHUB_REPOSITORY" \
