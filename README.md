@@ -344,7 +344,7 @@ fun aDoubleTapSavesOnce() = runTest {
 }
 ```
 
-| In the block | |
+| In the block | What it does |
 |---|---|
 | `dispatch(intent)` | Sends an intent to the host. |
 | `state`, `states` | The state now; every state since the test began. |
