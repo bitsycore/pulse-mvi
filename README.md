@@ -34,12 +34,12 @@ repositories {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("com.bitsycore.lib:pulse:0.4.0")
-            implementation("com.bitsycore.lib:pulse-viewmodel:0.4.0")
-            implementation("com.bitsycore.lib:pulse-compose:0.4.0")
+            implementation("com.bitsycore.lib:pulse:0.4.1")
+            implementation("com.bitsycore.lib:pulse-viewmodel:0.4.1")
+            implementation("com.bitsycore.lib:pulse-compose:0.4.1")
         }
         commonTest.dependencies {
-            implementation("com.bitsycore.lib:pulse-test:0.4.0")
+            implementation("com.bitsycore.lib:pulse-test:0.4.1")
         }
     }
 }
@@ -197,6 +197,19 @@ The reducer always runs, at once, for every dispatch. A policy decides on the si
 | `Debounce(delay, key)` | `Latest`, after a quiet delay: the text field updates at each key, the search runs once. |
 
 A null key means "this intent's class"; intents given the same key share one lane.
+
+An intent can say its own policy where it is declared, by being a `PolicedIntent`:
+
+```kotlin
+sealed interface Intent {
+    data object Print : Intent, PolicedIntent by IntentPolicy.DropIfRunning()
+    data class SelectScope(val scope: Scope) : Intent, PolicedIntent by IntentPolicy.Latest("load")
+    data class QueryChanged(val query: String) : Intent, PolicedIntent by IntentPolicy.Debounce(300.milliseconds)
+    data object Refresh : Intent   // Parallel
+}
+```
+
+That is the default only. `policyOf` has the final word, for a policy that depends on the state or on the ViewModel:
 
 ```kotlin
 override fun policyOf(intent: Intent) = when (intent) {

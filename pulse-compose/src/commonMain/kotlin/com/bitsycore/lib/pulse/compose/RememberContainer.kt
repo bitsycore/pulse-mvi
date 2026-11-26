@@ -11,6 +11,7 @@ import com.bitsycore.lib.pulse.container.ContainerContract
 import com.bitsycore.lib.pulse.container.ContainerHost
 import com.bitsycore.lib.pulse.container.ContainerScope
 import com.bitsycore.lib.pulse.container.IntentPolicy
+import com.bitsycore.lib.pulse.container.PolicedIntent
 import com.bitsycore.lib.pulse.container.StateChange
 import com.bitsycore.lib.pulse.container.StateSaver
 
@@ -25,7 +26,7 @@ public fun <STATE : Any, INTENT : Any, EFFECT : Any> rememberContainer(
 	contract: ContainerContract<STATE, INTENT, EFFECT>,
 	initialState: STATE,
 	saver: StateSaver<STATE>? = null,
-	policyOf: (INTENT) -> IntentPolicy = { IntentPolicy.Parallel },
+	policyOf: (INTENT) -> IntentPolicy = { (it as? PolicedIntent)?.policy ?: IntentPolicy.Parallel },
 	onError: ((intent: INTENT?, error: Exception) -> Unit)? = null,
 	handleIntent: suspend ContainerScope<STATE, INTENT, EFFECT>.(intent: INTENT, change: StateChange<STATE>) -> Unit = { _, _ -> },
 ): ContainerHost<STATE, INTENT, EFFECT> {

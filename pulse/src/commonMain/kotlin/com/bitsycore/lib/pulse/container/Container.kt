@@ -65,8 +65,11 @@ public abstract class Container<STATE : Any, INTENT : Any, EFFECT : Any>(
 	/** The side effect of [intent], with what the reducer just did of it. */
 	protected open suspend fun handleIntent(intent: INTENT, change: StateChange<STATE>): Unit = handleIntent(intent)
 
-	/** How the side effect of [intent] runs next to the ones already running. */
-	protected open fun policyOf(intent: INTENT): IntentPolicy = IntentPolicy.Parallel
+	/**
+	 * How the side effect of [intent] runs next to the ones already running: what the intent says
+	 * of itself when it is a [PolicedIntent], otherwise in parallel. Override to decide here.
+	 */
+	protected open fun policyOf(intent: INTENT): IntentPolicy = (intent as? PolicedIntent)?.policy ?: IntentPolicy.Parallel
 
 	/**
 	 * Runs once, when the container is first used: the first collection of [stateFlow] or the
@@ -254,7 +257,7 @@ public fun <STATE : Any, INTENT : Any, EFFECT : Any> Container(
 	coroutineScope: CoroutineScope,
 	saver: StateSaver<STATE>? = null,
 	observer: PulseObserver? = null,
-	policyOf: (INTENT) -> IntentPolicy = { IntentPolicy.Parallel },
+	policyOf: (INTENT) -> IntentPolicy = { (it as? PolicedIntent)?.policy ?: IntentPolicy.Parallel },
 	onError: ((intent: INTENT?, error: Exception) -> Unit)? = null,
 	handleIntent: suspend ContainerScope<STATE, INTENT, EFFECT>.(intent: INTENT, change: StateChange<STATE>) -> Unit = { _, _ -> },
 ): Container<STATE, INTENT, EFFECT> {

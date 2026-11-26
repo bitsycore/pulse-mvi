@@ -101,8 +101,9 @@ public final class com/bitsycore/lib/pulse/container/ContainerScope$DefaultImpls
 	public static synthetic fun updateState$default (Lcom/bitsycore/lib/pulse/container/ContainerScope;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 }
 
-public abstract interface class com/bitsycore/lib/pulse/container/IntentPolicy {
+public abstract interface class com/bitsycore/lib/pulse/container/IntentPolicy : com/bitsycore/lib/pulse/container/PolicedIntent {
 	public abstract fun getKey ()Ljava/lang/Object;
+	public fun getPolicy ()Lcom/bitsycore/lib/pulse/container/IntentPolicy;
 }
 
 public final class com/bitsycore/lib/pulse/container/IntentPolicy$Debounce : com/bitsycore/lib/pulse/container/IntentPolicy {
@@ -115,8 +116,13 @@ public final class com/bitsycore/lib/pulse/container/IntentPolicy$Debounce : com
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getDelay-UwyO8pc ()J
 	public fun getKey ()Ljava/lang/Object;
+	public fun getPolicy ()Lcom/bitsycore/lib/pulse/container/IntentPolicy;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/bitsycore/lib/pulse/container/IntentPolicy$DefaultImpls {
+	public static fun getPolicy (Lcom/bitsycore/lib/pulse/container/IntentPolicy;)Lcom/bitsycore/lib/pulse/container/IntentPolicy;
 }
 
 public final class com/bitsycore/lib/pulse/container/IntentPolicy$DropIfRunning : com/bitsycore/lib/pulse/container/IntentPolicy {
@@ -128,6 +134,7 @@ public final class com/bitsycore/lib/pulse/container/IntentPolicy$DropIfRunning 
 	public static synthetic fun copy$default (Lcom/bitsycore/lib/pulse/container/IntentPolicy$DropIfRunning;Ljava/lang/Object;ILjava/lang/Object;)Lcom/bitsycore/lib/pulse/container/IntentPolicy$DropIfRunning;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getKey ()Ljava/lang/Object;
+	public fun getPolicy ()Lcom/bitsycore/lib/pulse/container/IntentPolicy;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -141,6 +148,7 @@ public final class com/bitsycore/lib/pulse/container/IntentPolicy$Latest : com/b
 	public static synthetic fun copy$default (Lcom/bitsycore/lib/pulse/container/IntentPolicy$Latest;Ljava/lang/Object;ILjava/lang/Object;)Lcom/bitsycore/lib/pulse/container/IntentPolicy$Latest;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getKey ()Ljava/lang/Object;
+	public fun getPolicy ()Lcom/bitsycore/lib/pulse/container/IntentPolicy;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -149,6 +157,7 @@ public final class com/bitsycore/lib/pulse/container/IntentPolicy$Parallel : com
 	public static final field INSTANCE Lcom/bitsycore/lib/pulse/container/IntentPolicy$Parallel;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getKey ()Ljava/lang/Object;
+	public fun getPolicy ()Lcom/bitsycore/lib/pulse/container/IntentPolicy;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -162,8 +171,13 @@ public final class com/bitsycore/lib/pulse/container/IntentPolicy$Queue : com/bi
 	public static synthetic fun copy$default (Lcom/bitsycore/lib/pulse/container/IntentPolicy$Queue;Ljava/lang/Object;ILjava/lang/Object;)Lcom/bitsycore/lib/pulse/container/IntentPolicy$Queue;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getKey ()Ljava/lang/Object;
+	public fun getPolicy ()Lcom/bitsycore/lib/pulse/container/IntentPolicy;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/bitsycore/lib/pulse/container/PolicedIntent {
+	public abstract fun getPolicy ()Lcom/bitsycore/lib/pulse/container/IntentPolicy;
 }
 
 public abstract interface class com/bitsycore/lib/pulse/container/PulseObserver {

@@ -3,6 +3,7 @@ package com.bitsycore.lib.pulse.test
 import com.bitsycore.lib.pulse.container.Container
 import com.bitsycore.lib.pulse.container.ContainerContract
 import com.bitsycore.lib.pulse.container.IntentPolicy
+import com.bitsycore.lib.pulse.container.PolicedIntent
 import com.bitsycore.lib.pulse.container.PulseObserver
 import com.bitsycore.lib.pulse.container.StateSaver
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -23,7 +24,7 @@ public class TestContainer<STATE : Any, INTENT : Any, EFFECT : Any>(
 	private val reducer: (STATE, INTENT) -> STATE = contract::reduce,
 	saver: StateSaver<STATE>? = null,
 	observer: PulseObserver? = null,
-	private val policy: (INTENT) -> IntentPolicy = { IntentPolicy.Parallel },
+	private val policy: (INTENT) -> IntentPolicy = { (it as? PolicedIntent)?.policy ?: IntentPolicy.Parallel },
 	private val errorHandler: ((intent: INTENT?, error: Exception) -> Unit)? = null,
 	private val intentHandler: suspend TestContainer<STATE, INTENT, EFFECT>.(INTENT) -> Unit = {},
 ) : Container<STATE, INTENT, EFFECT>(contract, initialState, testScope, saver, observer) {

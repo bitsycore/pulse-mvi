@@ -4,6 +4,7 @@ import com.bitsycore.lib.pulse.Pulse
 import com.bitsycore.lib.pulse.container.Container
 import com.bitsycore.lib.pulse.container.ContainerContract
 import com.bitsycore.lib.pulse.container.IntentPolicy
+import com.bitsycore.lib.pulse.container.PolicedIntent
 import com.bitsycore.lib.pulse.container.PulseObserver
 import com.bitsycore.lib.pulse.container.StateChange
 import com.bitsycore.lib.pulse.container.StateSaver
@@ -51,6 +52,18 @@ private object Engine : ContainerContract<Engine.State, Engine.Intent, Engine.Ef
 		Intent.Add -> state.copy(count = state.count + 1)
 		Intent.Boom -> state
 		Intent.BadReduce -> error("bad reduce")
+	}
+}
+
+private object Policed : ContainerContract<Policed.State, Policed.Intent, Nothing>() {
+	data object State
+
+	sealed interface Intent {
+		data object Print : Intent, PolicedIntent by IntentPolicy.DropIfRunning()
+		data object Written : Intent, PolicedIntent {
+			override val policy = IntentPolicy.DropIfRunning()
+		}
+		data object Free : Intent
 	}
 }
 
@@ -201,6 +214,30 @@ class EngineTest {
 		runCurrent()
 
 		assertEquals(listOf(Engine.Intent.Submit, Engine.Intent.Add), vRan)
+	}
+
+	@Test
+	fun anIntentSaysItsOwnPolicyAndPolicyOfHasTheFinalWord() = runTest {
+		val vRan = mutableListOf<Policed.Intent>()
+		val vHandle: suspend com.bitsycore.lib.pulse.container.ContainerScope<Policed.State, Policed.Intent, Nothing>.(Policed.Intent, StateChange<Policed.State>) -> Unit = { vIntent, _ ->
+			vRan += vIntent
+			awaitCancellation()
+		}
+
+		// The intents' own policies: a second Print is dropped, Free runs each time.
+		val vOwn = Container(Policed, Policed.State, backgroundScope, handleIntent = vHandle)
+		repeat(2) { vOwn.dispatch(Policed.Intent.Print) }
+		repeat(2) { vOwn.dispatch(Policed.Intent.Written) }
+		repeat(2) { vOwn.dispatch(Policed.Intent.Free) }
+		runCurrent()
+		assertEquals(listOf(Policed.Intent.Print, Policed.Intent.Written, Policed.Intent.Free, Policed.Intent.Free), vRan)
+
+		// policyOf decides otherwise.
+		vRan.clear()
+		val vOverridden = Container(Policed, Policed.State, backgroundScope, policyOf = { IntentPolicy.Parallel }, handleIntent = vHandle)
+		repeat(2) { vOverridden.dispatch(Policed.Intent.Print) }
+		runCurrent()
+		assertEquals(2, vRan.size)
 	}
 
 	// ==================

@@ -8,8 +8,11 @@ import kotlin.time.Duration
  * The reducer always runs, at once, for every dispatch: a policy only decides on the side effect.
  * Policies that share a [key] share one lane; a null key means "this intent's class".
  */
-public sealed interface IntentPolicy {
+public sealed interface IntentPolicy : PolicedIntent {
 	public val key: Any?
+
+	/** A policy is its own: what lets an intent say `PolicedIntent by IntentPolicy.Latest()`. */
+	override val policy: IntentPolicy get() = this
 
 	/** Every dispatch gets its own coroutine, in no particular order. */
 	public data object Parallel : IntentPolicy {
@@ -27,4 +30,21 @@ public sealed interface IntentPolicy {
 
 	/** Like [Latest], and waits [delay] of quiet before running. */
 	public data class Debounce(val delay: Duration, override val key: Any? = null) : IntentPolicy
+}
+
+/**
+ * An intent that says its own policy, where it is declared, instead of in `policyOf`:
+ * ```
+ * sealed interface Intent {
+ *     data object Print : Intent, PolicedIntent by IntentPolicy.DropIfRunning()
+ *     data class Search(val query: String) : Intent, PolicedIntent by IntentPolicy.Debounce(300.milliseconds)
+ *     data object Refresh : Intent   // Parallel
+ * }
+ * ```
+ * or, written out, `override val policy = IntentPolicy.DropIfRunning()`.
+ *
+ * It is the default only: a container's `policyOf` has the final word.
+ */
+public interface PolicedIntent {
+	public val policy: IntentPolicy
 }

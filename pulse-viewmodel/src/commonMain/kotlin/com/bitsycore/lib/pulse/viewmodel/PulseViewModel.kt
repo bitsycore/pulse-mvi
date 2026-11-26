@@ -6,6 +6,7 @@ import com.bitsycore.lib.pulse.container.Container
 import com.bitsycore.lib.pulse.container.ContainerContract
 import com.bitsycore.lib.pulse.container.ContainerHost
 import com.bitsycore.lib.pulse.container.IntentPolicy
+import com.bitsycore.lib.pulse.container.PolicedIntent
 import com.bitsycore.lib.pulse.container.PulseObserver
 import com.bitsycore.lib.pulse.container.StateChange
 import com.bitsycore.lib.pulse.container.StateSaver
@@ -59,8 +60,11 @@ public abstract class PulseViewModel<STATE : Any, INTENT : Any, EFFECT : Any>(
 	/** The side effect of [intent], with what the reducer just did of it. */
 	protected open suspend fun handleIntent(intent: INTENT, change: StateChange<STATE>): Unit = handleIntent(intent)
 
-	/** How the side effect of [intent] runs next to the ones already running. */
-	protected open fun policyOf(intent: INTENT): IntentPolicy = IntentPolicy.Parallel
+	/**
+	 * How the side effect of [intent] runs next to the ones already running: what the intent says
+	 * of itself when it is a [PolicedIntent], otherwise in parallel. Override to decide here.
+	 */
+	protected open fun policyOf(intent: INTENT): IntentPolicy = (intent as? PolicedIntent)?.policy ?: IntentPolicy.Parallel
 
 	/** Runs once, at the first collection of [stateFlow] or the first [dispatch], never at construction. */
 	protected open suspend fun onStart() {}

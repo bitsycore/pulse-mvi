@@ -47,6 +47,11 @@ abstract interface <#A: kotlin/Any> com.bitsycore.lib.pulse.container/StateSaver
     open fun onStateChanged(#A) // com.bitsycore.lib.pulse.container/StateSaver.onStateChanged|onStateChanged(1:0){}[0]
 }
 
+abstract interface com.bitsycore.lib.pulse.container/PolicedIntent { // com.bitsycore.lib.pulse.container/PolicedIntent|null[0]
+    abstract val policy // com.bitsycore.lib.pulse.container/PolicedIntent.policy|{}policy[0]
+        abstract fun <get-policy>(): com.bitsycore.lib.pulse.container/IntentPolicy // com.bitsycore.lib.pulse.container/PolicedIntent.policy.<get-policy>|<get-policy>(){}[0]
+}
+
 abstract interface com.bitsycore.lib.pulse.container/PulseObserver { // com.bitsycore.lib.pulse.container/PulseObserver|null[0]
     open fun onEffect(kotlin/Any, kotlin/Any) // com.bitsycore.lib.pulse.container/PulseObserver.onEffect|onEffect(kotlin.Any;kotlin.Any){}[0]
     open fun onError(kotlin/Any, kotlin/Any?, kotlin/Exception) // com.bitsycore.lib.pulse.container/PulseObserver.onError|onError(kotlin.Any;kotlin.Any?;kotlin.Exception){}[0]
@@ -54,9 +59,11 @@ abstract interface com.bitsycore.lib.pulse.container/PulseObserver { // com.bits
     open fun onStateUpdate(kotlin/Any, kotlin/String?, kotlin/Any, kotlin/Any) // com.bitsycore.lib.pulse.container/PulseObserver.onStateUpdate|onStateUpdate(kotlin.Any;kotlin.String?;kotlin.Any;kotlin.Any){}[0]
 }
 
-sealed interface com.bitsycore.lib.pulse.container/IntentPolicy { // com.bitsycore.lib.pulse.container/IntentPolicy|null[0]
+sealed interface com.bitsycore.lib.pulse.container/IntentPolicy : com.bitsycore.lib.pulse.container/PolicedIntent { // com.bitsycore.lib.pulse.container/IntentPolicy|null[0]
     abstract val key // com.bitsycore.lib.pulse.container/IntentPolicy.key|{}key[0]
         abstract fun <get-key>(): kotlin/Any? // com.bitsycore.lib.pulse.container/IntentPolicy.key.<get-key>|<get-key>(){}[0]
+    open val policy // com.bitsycore.lib.pulse.container/IntentPolicy.policy|{}policy[0]
+        open fun <get-policy>(): com.bitsycore.lib.pulse.container/IntentPolicy // com.bitsycore.lib.pulse.container/IntentPolicy.policy.<get-policy>|<get-policy>(){}[0]
 
     final class Debounce : com.bitsycore.lib.pulse.container/IntentPolicy { // com.bitsycore.lib.pulse.container/IntentPolicy.Debounce|null[0]
         constructor <init>(kotlin.time/Duration, kotlin/Any? = ...) // com.bitsycore.lib.pulse.container/IntentPolicy.Debounce.<init>|<init>(kotlin.time.Duration;kotlin.Any?){}[0]
