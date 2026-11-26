@@ -1,41 +1,54 @@
 ![](demoAndroid/src/main/res/mipmap-xxxhdpi/ic_launcher.webp)
-# Pulse : A minimal Kotlin Multiplatform MVI library
+# Pulse
 
-A Kotlin Multiplatform MVI (Model-View-Intent) library. Minimal API surface, zero boilerplate, full coroutine integration.
+A small Kotlin Multiplatform MVI library, made for Compose Multiplatform.
 
-Pulse separates UI state management into predictable, testable layers: a pure reducer for synchronous state transitions, an intent handler for async side-effects, and one-shot effects for transient events like navigation or toasts.
+- **A pure reducer** owns the state: `(state, intent) -> state`.
+- **Side effects** run in coroutines, with a policy per intent (drop a double tap, keep only the latest load, queue, debounce).
+- **One-shot effects** for navigation and toasts, delivered once and never while the screen is hidden.
+- **Components**: state-only pieces that nest in a screen, in each other, or run alone.
+- **A test kit** that drives your real ViewModel.
+
+The core depends on `kotlinx-coroutines-core` and nothing else.
 
 ## Modules
 
-| Module             | Description                                   | Targets                         |
-|--------------------|-----------------------------------------------|---------------------------------|
-| `pulse`            | Core MVI container. Pure Kotlin + coroutines. | JVM, Android, iOS, JS, WasmJS   |
-| `pulse-viewmodel`  | AndroidX ViewModel integration, saved state.  | JVM, Android, iOS, JS, WasmJS   |
-| `pulse-compose`    | Compose Multiplatform extensions.             | JVM, Android, iOS, JS, WasmJS   |
-| `pulse-test`       | Test kit: drive a real ViewModel or container.| JVM, Android, iOS, JS, WasmJS   |
+All modules target JVM, Android, iOS, JS and WasmJS.
 
-### Dependency graph
-
-```
-pulse-compose     --> pulse
-pulse-viewmodel   --> pulse
-pulse-test        --> pulse
-```
-
-`pulse` has a single dependency: `kotlinx-coroutines-core`.
+| Module | What it holds | Depends on |
+|---|---|---|
+| `pulse` | The engine (`Container`), contracts, components. | coroutines |
+| `pulse-viewmodel` | `PulseViewModel`, the `SavedStateHandle` saver. | `pulse`, AndroidX lifecycle |
+| `pulse-compose` | Collecting state and effects, `rememberReducer`, `rememberContainer`. | `pulse`, Compose runtime |
+| `pulse-test` | The test kit. | `pulse`, coroutines-test |
 
 ## Installation
 
-Add the repository (in `settings.gradle.kts` or your repositories block):
-
 ```kotlin
+// settings.gradle.kts
 repositories {
     maven("https://maven.bitsycore.com/releases")
 }
+
+// build.gradle.kts
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation("com.bitsycore.lib:pulse:0.4.0")
+            implementation("com.bitsycore.lib:pulse-viewmodel:0.4.0")
+            implementation("com.bitsycore.lib:pulse-compose:0.4.0")
+        }
+        commonTest.dependencies {
+            implementation("com.bitsycore.lib:pulse-test:0.4.0")
+        }
+    }
+}
 ```
 
-Artifacts are also published to [GitHub Packages](https://github.com/bitsycore/pulse-mvi/packages)
-as a fallback. Note that GitHub Packages requires authentication, even for public packages:
+<details>
+<summary>Fallback repository: GitHub Packages</summary>
+
+GitHub Packages requires authentication, even for public packages:
 
 ```kotlin
 repositories {
@@ -48,22 +61,7 @@ repositories {
 }
 ```
 
-Then add the modules you need to your `build.gradle.kts`:
-
-```kotlin
-kotlin {
-    sourceSets {
-        commonMain.dependencies {
-            implementation("com.bitsycore.lib:pulse:<version>")
-            implementation("com.bitsycore.lib:pulse-viewmodel:<version>")
-            implementation("com.bitsycore.lib:pulse-compose:<version>")
-        }
-        commonTest.dependencies {
-            implementation("com.bitsycore.lib:pulse-test:<version>")
-        }
-    }
-}
-```
+</details>
 
 ## Quick start
 
@@ -184,7 +182,7 @@ flowchart LR
 | `launchOnce(key) { }` | A job, unless one is still running under that key. |
 | `launchQueued(key) { }` | A job, after the ones already under that key. |
 | `launchDebounced(key, delay) { }` | Like `launchLatest`, after a quiet delay. |
-| `cancelJob(key)`, `isRunning(key)` | |
+| `cancelJob(key)`, `isRunning(key)` | Cancels every job under a key; says whether one is running. |
 
 ### Intent policies
 
@@ -256,7 +254,7 @@ For anything else (a file, a database), implement `StateSaver`: `restore()`, and
 
 ## Compose extensions
 
-| | |
+| Function | What it does |
 |---|---|
 | `host.collectAsStateWithLifecycle()` | The state, collected while the lifecycle is at least STARTED. |
 | `host.collectEffect { }` | The effects, handled while the lifecycle is at least STARTED. One emitted while the app is in the background, or the screen under another one, waits for the return. |
@@ -346,13 +344,13 @@ fun aDoubleTapSavesOnce() = runTest {
 }
 ```
 
-| | |
+| In the block | |
 |---|---|
-| `dispatch(intent)` | |
+| `dispatch(intent)` | Sends an intent to the host. |
 | `state`, `states` | The state now; every state since the test began. |
-| `expectState(expected)`, `expectState { predicate }` | |
+| `expectState(expected)`, `expectState { predicate }` | Checks the state, once what is due has run. |
 | `expectEffect<T>()`, `expectEffect(expected)`, `nextEffect()` | The next effect not yet looked at. |
-| `expectNoEffects()` | |
+| `expectNoEffects()` | Fails if an effect is waiting. |
 | `settle()`, `advanceBy(duration)` | Run what is due now; move the clock. |
 
 A reducer is a pure function, a component too: test them by calling `reduce`.
