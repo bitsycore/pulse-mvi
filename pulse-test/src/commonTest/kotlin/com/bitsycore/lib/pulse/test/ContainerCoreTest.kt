@@ -30,7 +30,7 @@ class ContainerCoreTest {
 
 	private class CoreContainer(
 		coroutineScope: CoroutineScope,
-		private val onErrorCallback: (Throwable) -> Unit = { throw it }
+		private val onErrorCallback: (Exception) -> Unit = { throw it }
 	) : Container<CoreContract.UiState, CoreContract.Intent, CoreContract.Effect>(
 		containerContract = CoreContract,
 		initialState = CoreContract.UiState(),
@@ -43,7 +43,7 @@ class ContainerCoreTest {
 			}
 		}
 
-		override fun onError(intent: CoreContract.Intent, error: Throwable) = onErrorCallback(error)
+		override fun onError(intent: CoreContract.Intent?, error: Exception) = onErrorCallback(error)
 	}
 
 	// Regression: effects emitted while nobody collects must be buffered, not dropped.

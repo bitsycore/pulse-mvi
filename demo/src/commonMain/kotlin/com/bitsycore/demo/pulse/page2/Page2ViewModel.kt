@@ -1,15 +1,30 @@
 package com.bitsycore.demo.pulse.page2
 
 import androidx.lifecycle.Lifecycle
+import com.bitsycore.lib.pulse.container.StateChange
 import com.bitsycore.lib.pulse.viewmodel.PulseViewModel
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.seconds
 
 class Page2ViewModel : PulseViewModel<Page2Contract.UiState, Page2Contract.Intent, Page2Contract.Effect>(
 	Page2Contract,
 	Page2Contract.UiState(),
 ) {
 
-	override suspend fun handleIntent(intent: Page2Contract.Intent) {
+	// Counts the seconds for as long as the screen is shown, and stops a moment after it left:
+	// no timer in the screen, no job to keep.
+	override suspend fun whileActive() {
+		while (true) {
+			delay(1.seconds)
+			dispatch(Page2Contract.Intent.Tick)
+		}
+	}
+
+	override suspend fun handleIntent(intent: Page2Contract.Intent, change: StateChange<Page2Contract.UiState>) {
 		when (intent) {
+			Page2Contract.Intent.Tick ->
+				if (change.current.count % 5 == 0) emitEffect(Page2Contract.Effect.ShowToast("${change.current.count} seconds"))
+
 			// Log all lifecycle events
 			is Page2Contract.Intent.OnLifecycle -> {
 				when(intent.event) {
@@ -40,13 +55,4 @@ class Page2ViewModel : PulseViewModel<Page2Contract.UiState, Page2Contract.Inten
 
 	override fun onCleared() = println("[Page2][ViewModel] onCleared")
 
-	fun tick() = dispatchCustom {
-		reduce {
-			copy(count = count + 1)
-		}
-		handle {
-			if (stateFlow.value.count % 5 == 0)
-				emitEffect(Page2Contract.Effect.ShowToast("Counter incremented!"))
-		}
-	}
 }

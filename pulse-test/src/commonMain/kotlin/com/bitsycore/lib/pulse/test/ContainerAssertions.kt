@@ -14,14 +14,14 @@ import kotlin.test.assertTrue
 /**
  * Asserts the current state matches the [expected] value.
  */
-fun <STATE : Any> ContainerHost<STATE, *, *>.assertState(expected: STATE) {
+public fun <STATE : Any> ContainerHost<STATE, *, *>.assertState(expected: STATE) {
 	assertEquals(expected, stateFlow.value)
 }
 
 /**
  * Asserts the current state satisfies the given [predicate].
  */
-fun <STATE : Any> ContainerHost<STATE, *, *>.assertState(
+public fun <STATE : Any> ContainerHost<STATE, *, *>.assertState(
 	message: String? = null,
 	predicate: (STATE) -> Boolean
 ) {
@@ -39,7 +39,7 @@ fun <STATE : Any> ContainerHost<STATE, *, *>.assertState(
  * assertEquals(1, effects.size)
  * ```
  */
-suspend fun <EFFECT : Any> ContainerHost<*, *, EFFECT>.collectEffects(
+public suspend fun <EFFECT : Any> ContainerHost<*, *, EFFECT>.collectEffects(
 	scope: TestScope,
 	block: suspend () -> Unit
 ): List<EFFECT> {
@@ -64,7 +64,7 @@ suspend fun <EFFECT : Any> ContainerHost<*, *, EFFECT>.collectEffects(
  * }
  * ```
  */
-suspend fun <EFFECT : Any> ContainerHost<*, *, EFFECT>.awaitEffect(
+public suspend fun <EFFECT : Any> ContainerHost<*, *, EFFECT>.awaitEffect(
 	block: suspend () -> Unit
 ): EFFECT {
 	var result: EFFECT? = null
@@ -79,7 +79,8 @@ suspend fun <EFFECT : Any> ContainerHost<*, *, EFFECT>.awaitEffect(
 }
 
 /**
- * Convenience to run a test against a [TestContainer].
+ * Convenience to run a test against a [TestContainer], reducing through the contract's own
+ * reducer unless [reduce] is given.
  *
  * Usage:
  * ```kotlin
@@ -92,12 +93,12 @@ suspend fun <EFFECT : Any> ContainerHost<*, *, EFFECT>.awaitEffect(
  * }
  * ```
  */
-fun <STATE : Any, INTENT : Any, EFFECT : Any> com.bitsycore.lib.pulse.container.ContainerContract<STATE, INTENT, EFFECT>.containerTest(
+public fun <STATE : Any, INTENT : Any, EFFECT : Any> com.bitsycore.lib.pulse.container.ContainerContract<STATE, INTENT, EFFECT>.containerTest(
 	initialState: STATE,
-	reduce: (STATE, INTENT) -> STATE = { state, _ -> state },
+	reduce: (STATE, INTENT) -> STATE = this::reduce,
 	handleIntent: suspend TestContainer<STATE, INTENT, EFFECT>.(INTENT) -> Unit = {},
 	block: suspend TestContainer<STATE, INTENT, EFFECT>.() -> Unit
-) = runTest {
+): kotlinx.coroutines.test.TestResult = runTest {
 	val container = TestContainer(
 		this@containerTest,
 		initialState = initialState,

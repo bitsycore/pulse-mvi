@@ -1,37 +1,20 @@
 package com.bitsycore.lib.pulse.scopes
 
+import androidx.lifecycle.Lifecycle
+
 @PulseScopeDsl
-class LifecycleIntentScope<INTENT>(private val dispatcher: ((INTENT) -> Unit)) {
+public class LifecycleIntentScope<INTENT>(private val dispatcher: (INTENT) -> Unit) {
 
-	internal var onCreate: (() -> Unit)? = null
-	internal var onStart: (() -> Unit)? = null
-	internal var onStop: (() -> Unit)? = null
-	internal var onResume: (() -> Unit)? = null
-	internal var onPause: (() -> Unit)? = null
-	internal var onDestroy: (() -> Unit)? = null
+	private val mHandlers = mutableMapOf<Lifecycle.Event, () -> INTENT>()
 
-	fun onCreate(block: () -> INTENT) {
-		onCreate = { dispatcher(block()) }
+	public fun onCreate(block: () -> INTENT) { mHandlers[Lifecycle.Event.ON_CREATE] = block }
+	public fun onStart(block: () -> INTENT) { mHandlers[Lifecycle.Event.ON_START] = block }
+	public fun onResume(block: () -> INTENT) { mHandlers[Lifecycle.Event.ON_RESUME] = block }
+	public fun onPause(block: () -> INTENT) { mHandlers[Lifecycle.Event.ON_PAUSE] = block }
+	public fun onStop(block: () -> INTENT) { mHandlers[Lifecycle.Event.ON_STOP] = block }
+	public fun onDestroy(block: () -> INTENT) { mHandlers[Lifecycle.Event.ON_DESTROY] = block }
+
+	internal fun on(event: Lifecycle.Event) {
+		mHandlers[event]?.let { dispatcher(it()) }
 	}
-
-	fun onStart(block: () -> INTENT) {
-		onStart = { dispatcher(block()) }
-	}
-
-	fun onStop(block: () -> INTENT) {
-		onStop = { dispatcher(block()) }
-	}
-
-	fun onResume(block: () -> INTENT) {
-		onResume = { dispatcher(block()) }
-	}
-
-	fun onPause(block: () -> INTENT) {
-		onPause = { dispatcher(block()) }
-	}
-
-	fun onDestroy(block: () -> INTENT) {
-		onDestroy = { dispatcher(block()) }
-	}
-
 }

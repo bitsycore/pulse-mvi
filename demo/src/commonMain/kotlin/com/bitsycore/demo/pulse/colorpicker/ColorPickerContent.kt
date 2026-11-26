@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bitsycore.demo.pulse.colorpicker.ColorPickerComponent.State
+import com.bitsycore.lib.pulse.compose.rememberReducer
 
 @Composable
 fun ColorPickerContent(
@@ -140,21 +141,11 @@ private fun ColorSlider(
 @Composable
 private fun ColorPickerPreview() {
 	Surface(modifier = Modifier.fillMaxWidth()) {
-		var state by remember {
-			mutableStateOf(
-				State(
-					red = 0.5f,
-					green = 0.3f,
-					blue = 0.8f,
-					label = "Pick a color",
-					showHex = true
-				)
-			)
-		}
-		ColorPickerContent(
-			state = state,
-			dispatch = { state = ColorPickerComponent.reduce(state, it) }
+		val (state, dispatch) = rememberReducer(
+			ColorPickerComponent,
+			State(red = 0.5f, green = 0.3f, blue = 0.8f, label = "Pick a color", showHex = true),
 		)
+		ColorPickerContent(state, dispatch)
 	}
 }
 

@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.bitsycore.lib.pulse.test
 
 import com.bitsycore.lib.pulse.utility.DebouncedDispatcher
@@ -10,6 +12,7 @@ import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
+
 class DebouncedDispatcherTest {
 
 	@Test

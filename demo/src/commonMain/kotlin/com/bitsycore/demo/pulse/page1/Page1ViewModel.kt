@@ -2,16 +2,26 @@ package com.bitsycore.demo.pulse.page1
 
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.SavedStateHandle
-import com.bitsycore.lib.pulse.savedstate.PulseSavedStateViewModel
-import kotlinx.serialization.serializer
+import com.bitsycore.lib.pulse.viewmodel.PulseViewModel
+import com.bitsycore.lib.pulse.viewmodel.stateSaver
+import kotlinx.serialization.json.Json
 
 class Page1ViewModel(savedStateHandle: SavedStateHandle) :
-	PulseSavedStateViewModel<Page1Contract.UiState, Page1Contract.Intent, Page1Contract.Effect>(
-		initialState = Page1Contract.UiState(count = savedStateHandle.toString().length),
+	PulseViewModel<Page1Contract.UiState, Page1Contract.Intent, Page1Contract.Effect>(
 		containerContract = Page1Contract,
-		savedStateHandle = savedStateHandle,
-		serializer = serializer<Page1Contract.UiState>()
+		initialState = Page1Contract.UiState(),
+		// The state survives the process through the SavedStateHandle; how it is written is ours.
+		saver = savedStateHandle.stateSaver(
+			encode = { Json.encodeToString(Page1Contract.UiState.serializer(), it) },
+			decode = { Json.decodeFromString(Page1Contract.UiState.serializer(), it) },
+			onDecodeError = { println("[Page1][SavedState] could not be read: $it") },
+		),
 	) {
+
+	// A failing side effect is reported, and the screen lives on.
+	override fun onError(intent: Page1Contract.Intent?, error: Exception) =
+		emitEffect(Page1Contract.Effect.ShowToast("Failed: ${error.message}"))
+
 
 	override suspend fun handleIntent(intent: Page1Contract.Intent) {
 		when (intent) {
@@ -46,15 +56,6 @@ class Page1ViewModel(savedStateHandle: SavedStateHandle) :
 			else -> {}
 		}
 	}
-
-	fun add() = dispatchCustom {
-        reduce {
-            copy(count = count + 1)
-        }
-		handle {
-			emitEffect(Page1Contract.Effect.ShowToast("Counter incremented!"))
-		}
-    }
 
 	override fun onCleared() = println("[Page1][ViewModel] onCleared")
 }

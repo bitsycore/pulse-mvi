@@ -49,8 +49,7 @@ kotlin {
 				listOf(
 					":pulse",
 					":pulse-viewmodel",
-					":pulse-compose",
-					":pulse-savedstate"
+					":pulse-compose"
 				).forEach { lib ->
 					when (mode) {
 						"snapshot" -> implementation("$pulseGroup$lib:$baseVersion-SNAPSHOT-+")
@@ -60,6 +59,8 @@ kotlin {
 					}
 				}
 			}
+			implementation(libs.kotlinx.serialization.json)
+			implementation(libs.jetbrains.androidx.lifecycle.viewmodel.savedstate)
 			implementation(libs.jetbrains.compose.material3)
 			implementation(libs.jetbrains.compose.foundation)
 			implementation(libs.jetbrains.compose.ui)

@@ -1,0 +1,32 @@
+public abstract class com/bitsycore/lib/pulse/viewmodel/PulseViewModel : androidx/lifecycle/ViewModel, com/bitsycore/lib/pulse/container/ContainerHost {
+	public fun <init> (Lcom/bitsycore/lib/pulse/container/ContainerContract;Ljava/lang/Object;Lcom/bitsycore/lib/pulse/container/StateSaver;Lcom/bitsycore/lib/pulse/container/PulseObserver;)V
+	public synthetic fun <init> (Lcom/bitsycore/lib/pulse/container/ContainerContract;Ljava/lang/Object;Lcom/bitsycore/lib/pulse/container/StateSaver;Lcom/bitsycore/lib/pulse/container/PulseObserver;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	protected final fun cancelJob (Ljava/lang/Object;)V
+	public final fun dispatch (Ljava/lang/Object;)V
+	protected final fun emitEffect (Ljava/lang/Object;)V
+	public final fun getEffectFlow ()Lkotlinx/coroutines/flow/Flow;
+	protected fun getInactiveGrace-UwyO8pc ()J
+	public final fun getState ()Ljava/lang/Object;
+	public final fun getStateFlow ()Lkotlinx/coroutines/flow/StateFlow;
+	protected fun handleIntent (Ljava/lang/Object;Lcom/bitsycore/lib/pulse/container/StateChange;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected fun handleIntent (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun isRunning (Ljava/lang/Object;)Z
+	protected final fun launchDebounced-8Mi8wO0 (Ljava/lang/Object;JLkotlin/jvm/functions/Function2;)Lkotlinx/coroutines/Job;
+	protected final fun launchLatest (Ljava/lang/Object;Lkotlin/jvm/functions/Function2;)Lkotlinx/coroutines/Job;
+	protected final fun launchOnce (Ljava/lang/Object;Lkotlin/jvm/functions/Function2;)Lkotlinx/coroutines/Job;
+	protected final fun launchQueued (Ljava/lang/Object;Lkotlin/jvm/functions/Function2;)Lkotlinx/coroutines/Job;
+	protected fun onError (Ljava/lang/Object;Ljava/lang/Exception;)V
+	protected fun onStart (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected fun policyOf (Ljava/lang/Object;)Lcom/bitsycore/lib/pulse/container/IntentPolicy;
+	protected fun reduce (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+	protected final fun reduceOnly (Ljava/lang/Object;)V
+	protected final fun updateState (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun updateState$default (Lcom/bitsycore/lib/pulse/viewmodel/PulseViewModel;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	protected fun whileActive (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/bitsycore/lib/pulse/viewmodel/SavedStateHandleSaverKt {
+	public static final fun stateSaver (Landroidx/lifecycle/SavedStateHandle;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lcom/bitsycore/lib/pulse/container/StateSaver;
+	public static synthetic fun stateSaver$default (Landroidx/lifecycle/SavedStateHandle;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/bitsycore/lib/pulse/container/StateSaver;
+}
+

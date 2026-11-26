@@ -20,7 +20,8 @@ import kotlin.time.Duration
  * @param coroutineScope The scope used to launch debounce delay jobs.
  * @param dispatch The underlying dispatch function to invoke after the debounce window.
  */
-class DebouncedDispatcher<INTENT : Any>(
+@Deprecated("Use IntentPolicy.Debounce in policyOf, or launchDebounced(key, delay) { }")
+public class DebouncedDispatcher<INTENT : Any>(
 	private val coroutineScope: CoroutineScope,
 	private val dispatch: (INTENT) -> Unit
 ) {
@@ -48,7 +49,7 @@ class DebouncedDispatcher<INTENT : Any>(
 	 *   the last successfully dispatched intent for the same debounce key.
 	 * @param shareAcrossTypes When `true`, the intent's class is excluded from the key.
 	 */
-	fun dispatchDebounced(
+	public fun dispatchDebounced(
 		intent: INTENT,
 		delay: Duration,
 		key: String? = null,
@@ -104,7 +105,7 @@ class DebouncedDispatcher<INTENT : Any>(
 	 *
 	 * @param key The debounce key string to cancel.
 	 */
-	fun cancel(key: String) {
+	public fun cancel(key: String) {
 		coroutineScope.launch {
 			mutex.withLock {
 				val matchesKey: (Any) -> Boolean = { debounceKey ->
@@ -126,7 +127,7 @@ class DebouncedDispatcher<INTENT : Any>(
 	 * Does **not** affect already-dispatched intents. Clears the `skipIfUnchanged`
 	 * history so that subsequent dispatches are not skipped.
 	 */
-	fun cancelAll() {
+	public fun cancelAll() {
 		coroutineScope.launch {
 			mutex.withLock {
 				debounceJobs.values.forEach { it.cancel() }
@@ -143,7 +144,7 @@ class DebouncedDispatcher<INTENT : Any>(
 	 * After calling this, the next [dispatchDebounced] with `skipIfUnchanged = true`
 	 * will dispatch even if the intent matches a previously dispatched one.
 	 */
-	fun clearHistory() {
+	public fun clearHistory() {
 		coroutineScope.launch {
 			mutex.withLock {
 				lastIntents.clear()

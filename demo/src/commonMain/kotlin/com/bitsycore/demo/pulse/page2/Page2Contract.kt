@@ -10,7 +10,15 @@ object Page2Contract : ContainerContract<Page2Contract.UiState, Page2Contract.In
 		val message: String = "Hello from Page 2",
 	)
 
+	override fun reduce(state: UiState, intent: Intent): UiState = when (intent) {
+		Intent.Tick -> state.copy(count = state.count + 1)
+		else -> state
+	}
+
 	sealed interface Intent {
+
+		// Sent by the ViewModel itself, every second while the screen is shown
+		data object Tick : Intent
 
 		// Lifecycle-driven
 		// Prefer Intent without lifecycle related name but for demo, simplify it

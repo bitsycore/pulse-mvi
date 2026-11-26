@@ -25,7 +25,7 @@ androidxNavigation3 = "1.1.0"
 # MARK: Android
 
 # Base Config
-agp = "9.0.0-alpha06"
+agp = "9.4.1"
 
 # AndroidX
 androidxActivity = "1.13.0"

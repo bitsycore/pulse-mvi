@@ -10,17 +10,15 @@ Pulse separates UI state management into predictable, testable layers: a pure re
 | Module             | Description                                   | Targets                         |
 |--------------------|-----------------------------------------------|---------------------------------|
 | `pulse`            | Core MVI container. Pure Kotlin + coroutines. | JVM, Android, iOS, JS, WasmJS   |
-| `pulse-viewmodel`  | AndroidX ViewModel integration.               | JVM, Android, iOS, JS, WasmJS   |
-| `pulse-savedstate` | Auto-persist state via SavedStateHandle.      | JVM, Android, iOS, JS, WasmJS   |
+| `pulse-viewmodel`  | AndroidX ViewModel integration, saved state.  | JVM, Android, iOS, JS, WasmJS   |
 | `pulse-compose`    | Compose Multiplatform extensions.             | JVM, Android, iOS, JS, WasmJS   |
-| `pulse-test`       | Test utilities with synchronous dispatch.     | JVM, Android, iOS, JS, WasmJS   |
+| `pulse-test`       | Test kit: drive a real ViewModel or container.| JVM, Android, iOS, JS, WasmJS   |
 
 ### Dependency graph
 
 ```
 pulse-compose     --> pulse
 pulse-viewmodel   --> pulse
-pulse-savedstate  --> pulse-viewmodel --> pulse
 pulse-test        --> pulse
 ```
 
@@ -59,7 +57,6 @@ kotlin {
             implementation("com.bitsycore.lib:pulse:<version>")
             implementation("com.bitsycore.lib:pulse-viewmodel:<version>")
             implementation("com.bitsycore.lib:pulse-compose:<version>")
-            implementation("com.bitsycore.lib:pulse-savedstate:<version>")
         }
         commonTest.dependencies {
             implementation("com.bitsycore.lib:pulse-test:<version>")
@@ -70,68 +67,83 @@ kotlin {
 
 ## Quick start
 
-### 1. Define the contract
+### 1. The contract
 
-A contract declares the state, intents, and effects for a screen. It is the single source of truth.
+The state, the intents, the effects, and the pure reducer that is the single source of truth for the state.
 
 ```kotlin
 object CounterContract : ContainerContract<CounterContract.UiState, CounterContract.Intent, CounterContract.Effect>() {
 
-    data class UiState(
-        val count: Int = 0,
-    )
+    data class UiState(val count: Int = 0, val saving: Boolean = false)
 
     sealed interface Intent {
         data object Increment : Intent
-        data object Decrement : Intent
-        data object Reset : Intent
+        data object Save : Intent
+        data object Saved : Intent
     }
 
     sealed interface Effect {
         data class ShowToast(val message: String) : Effect
     }
-}
-```
-
-### 2. Implement the ViewModel
-
-The ViewModel holds the container, defines state reductions, and handles side-effects.
-
-```kotlin
-class CounterViewModel : PulseViewModel<UiState, Intent, Effect>(
-    containerContract = CounterContract,
-    initialState = UiState()
-) {
 
     override fun reduce(state: UiState, intent: Intent): UiState = when (intent) {
         Intent.Increment -> state.copy(count = state.count + 1)
-        Intent.Decrement -> state.copy(count = state.count - 1)
-        Intent.Reset     -> state.copy(count = 0)
+        Intent.Save -> state.copy(saving = true)
+        Intent.Saved -> state.copy(saving = false)
+    }
+}
+```
+
+### 2. The ViewModel
+
+The side effects: what an intent does besides changing the state.
+
+```kotlin
+class CounterViewModel(private val repository: Repository) : PulseViewModel<UiState, Intent, Effect>(CounterContract, UiState()) {
+
+    // A double tap saves once.
+    override fun policyOf(intent: Intent) = when (intent) {
+        Intent.Save -> IntentPolicy.DropIfRunning()
+        else -> IntentPolicy.Parallel
     }
 
     override suspend fun handleIntent(intent: Intent) {
         when (intent) {
-            Intent.Reset -> emitEffect(Effect.ShowToast("Counter reset"))
-            else -> {}
+            Intent.Save -> {
+                repository.save(state.count)
+                reduceOnly(Intent.Saved)
+                emitEffect(Effect.ShowToast("Saved"))
+            }
+            else -> Unit
         }
+    }
+
+    // A failing side effect is reported, and the screen lives on.
+    override fun onError(intent: Intent?, error: Exception) {
+        reduceOnly(Intent.Saved)
+        emitEffect(Effect.ShowToast("Could not save"))
     }
 }
 ```
 
-### 3. Connect the UI (Compose)
+### 3. The screen (Compose)
 
 ```kotlin
 @Composable
-fun CounterScreen(viewModel: CounterViewModel = viewModel { CounterViewModel() }) {
+fun CounterScreen(viewModel: CounterViewModel = viewModel { CounterViewModel(repository) }) {
     val state by viewModel.collectAsStateWithLifecycle()
-
     viewModel.collectEffect { effect ->
         when (effect) {
             is Effect.ShowToast -> { /* show snackbar */ }
         }
     }
-
     CounterContent(state, viewModel::dispatch)
+}
+
+@Preview @Composable
+private fun CounterPreview() {
+    val (state, dispatch) = rememberReducer(CounterContract, UiState())
+    CounterContent(state, dispatch)
 }
 ```
 
@@ -139,365 +151,217 @@ fun CounterScreen(viewModel: CounterViewModel = viewModel { CounterViewModel() }
 
 ### Container
 
-`Container` is the MVI engine. It receives intents, runs them through a pure reducer for state transitions, then launches an async handler for side-effects.
+`Container` is the MVI engine, with no dependency but coroutines. `PulseViewModel` is a container living in a ViewModel; everything below is available in both.
 
 ```mermaid
 flowchart LR
     UI["UI"] -->|"dispatch(Intent)"| R["reduce()"]
     R -->|"new State"| UI2["UI recomposes"]
-    UI -->|"dispatch(Intent)"| H["handleIntent()"]
-    H -->|"async work"| E["emitEffect()"]
+    R -->|"StateChange"| P["policyOf()"]
+    P --> H["handleIntent()"]
+    H -->|"reduceOnly / updateState"| R
+    H -->|"emitEffect()"| E["Effect"]
+    H -.->|"throws"| X["onError()"]
 ```
 
-- `reduce(state, intent)` -- Pure, synchronous. Returns the next state. No side-effects.
-- `handleIntent(intent)` -- Suspend function for async work (network, database, etc.).
-- `emitEffect(effect)` -- Emits a one-shot event (navigation, toasts, etc.). Effects are buffered but not replayed to late collectors.
-- `updateState { copy(...) }` -- Convenience for modifying state outside the reducer (e.g., inside callbacks).
+| Hook (override) | When |
+|---|---|
+| `reduce(state, intent)` | Pure and synchronous, at every dispatch. Defaults to the contract's reducer. |
+| `handleIntent(intent)` or `handleIntent(intent, change)` | The side effect, in a coroutine, after the reducer. `change.previous` / `change.current` / `change.changed` say what the reducer just did, so a side effect can tell "I set busy" from "busy was already set". |
+| `policyOf(intent)` | How that side effect runs next to the ones already running (see below). |
+| `onStart()` | Once, at the first collection of `stateFlow` or the first `dispatch`. Never at construction. |
+| `whileActive()` | While someone collects `stateFlow`; cancelled `inactiveGrace` (5 s) after the last collector left, started again at the next one. Timers, polling, listeners. |
+| `onError(intent, error)` | What a reducer, a side effect or a job threw. Rethrows by default (fail fast); override to report and keep running. `intent` is null when no intent was behind it. |
 
-### DebouncedDispatcher
+| Tool (call) | What |
+|---|---|
+| `state` | The current state. |
+| `dispatch(intent)` | Reduce, then the side effect. |
+| `reduceOnly(intent)` | Reduce only: a result coming back from async work goes through the reducer without starting another side effect. |
+| `updateState("name") { copy(...) }` | Changes the state outside the reducer; the optional name is what an observer sees. |
+| `emitEffect(effect)` | A one-shot event (navigation, a toast). |
+| `launchLatest(key) { }` | A job; the one still running under that key is cancelled. |
+| `launchOnce(key) { }` | A job, unless one is still running under that key. |
+| `launchQueued(key) { }` | A job, after the ones already under that key. |
+| `launchDebounced(key, delay) { }` | Like `launchLatest`, after a quiet delay. |
+| `cancelJob(key)`, `isRunning(key)` | |
 
-Standalone debounce engine for rate-limiting rapid input. Not embedded in `Container` - create one and wire it to any dispatch function.
+### Intent policies
 
-- `dispatchDebounced(intent, delay)` -- Dispatches after a debounce window. Configurable debounce key, skip-if-unchanged, and cross-type sharing.
-- `cancel(key)` -- Cancels a pending debounce by key and clears its dispatch history.
-- `cancelAll()` -- Cancels all pending debounces and clears all dispatch history.
-- `clearHistory()` -- Resets the `skipIfUnchanged` history without cancelling pending debounces.
+The reducer always runs, at once, for every dispatch. A policy decides on the side effect only.
 
-### ContainerContract
+| Policy | Side effect |
+|---|---|
+| `Parallel` (default) | One coroutine per dispatch, in no particular order. |
+| `DropIfRunning(key)` | Skipped while the previous one runs: a double tap prints once. |
+| `Latest(key)` | Cancels the previous one: a slow load cannot land after a newer one. |
+| `Queue(key)` | After the previous ones, in dispatch order. |
+| `Debounce(delay, key)` | `Latest`, after a quiet delay: the text field updates at each key, the search runs once. |
 
-Groups the three MVI types into a single object. Does not hold state - `initialState` is provided by the ViewModel.
+A null key means "this intent's class"; intents given the same key share one lane.
 
 ```kotlin
-object MyContract : ContainerContract<MyState, MyIntent, MyEffect>()
-```
-
-### ContainerHost
-
-Interface exposing the public API of a container:
-
-```kotlin
-interface ContainerHost<STATE, INTENT, EFFECT> {
-    val stateFlow: StateFlow<STATE>
-    val effectFlow: Flow<EFFECT>
-    fun dispatch(intent: INTENT)
+override fun policyOf(intent: Intent) = when (intent) {
+    is Intent.Print -> IntentPolicy.DropIfRunning()
+    is Intent.SelectScope -> IntentPolicy.Latest("load")
+    is Intent.QueryChanged -> IntentPolicy.Debounce(300.milliseconds)
+    else -> IntentPolicy.Parallel
 }
 ```
 
 ### Effects
 
-Effects are emitted via `emitEffect()` and delivered through a `SharedFlow`. They are fire-and-forget one-shot events - each effect is delivered to active collectors only. Effects are not replayed to late subscribers. Use `collectEffect` or `collectEffectWithLifecycle` in Compose to handle them.
+Each effect is delivered exactly once, and kept while nobody collects. They are meant for a single collector: two collectors would share the effects between them.
 
-## ViewModel integration
+### Observer
 
-### PulseViewModel
-
-Wraps `Container` in an AndroidX `ViewModel`. The container's coroutine scope is tied to `viewModelScope`.
+`PulseObserver` sees every intent (with the state before and after), every named state update, every effect and every error: a log, a journal, a debugger. Set one for the whole app, or give one to a container.
 
 ```kotlin
-class MyViewModel : PulseViewModel<MyState, MyIntent, MyEffect>(
-    containerContract = MyContract,
-    initialState = MyState()
-) {
-    override fun reduce(state: MyState, intent: MyIntent): MyState = ...
-    override suspend fun handleIntent(intent: MyIntent) { ... }
+Pulse.observer = object : PulseObserver {
+    override fun onIntent(source: Any, intent: Any, previous: Any, current: Any) =
+        log("${source::class.simpleName}: ${intent::class.simpleName}")
+    override fun onError(source: Any, intent: Any?, error: Exception) = report(error)
 }
 ```
 
-### PulseSavedStateViewModel
-
-Extends `PulseViewModel` with automatic state persistence via `SavedStateHandle`. State is serialized to JSON on every change and restored on creation. Requires `STATE` to be `@Serializable`.
+### A container without a ViewModel
 
 ```kotlin
-@Serializable
-data class UiState(val count: Int = 0)
-
-class MyViewModel(savedStateHandle: SavedStateHandle) :
-    PulseSavedStateViewModel<UiState, Intent, Effect>(
-        containerContract = MyContract,
-        initialState = UiState(),
-        savedStateHandle = savedStateHandle,
-        serializer = UiState.serializer()
-    ) {
-    override fun reduce(state: UiState, intent: Intent): UiState = ...
+val container = Container(MyContract, MyContract.UiState(), coroutineScope) { intent, change ->
+    // this: ContainerScope (state, reduceOnly, emitEffect, launchLatest, ...)
 }
 ```
 
-In Compose:
+or subclass `Container` and override the hooks.
+
+## Saved state
+
+A container keeps its state across its death through a `StateSaver`; without one it keeps nothing. `pulse-viewmodel` ships one over `SavedStateHandle`. How the state is written is yours (JSON, a subset, a sealed form), and it is encoded only when the platform asks for the saved state, not at every change.
 
 ```kotlin
+class MyViewModel(handle: SavedStateHandle) : PulseViewModel<UiState, Intent, Effect>(
+    MyContract, UiState(),
+    saver = handle.stateSaver(
+        encode = { Json.encodeToString(UiState.serializer(), it) },
+        decode = { Json.decodeFromString(UiState.serializer(), it) },
+    ),
+)
+
+// In Compose:
 val viewModel: MyViewModel = viewModel { MyViewModel(createSavedStateHandle()) }
 ```
 
-State survives process death and backstack eviction as long as the `SavedStateHandle` is alive.
+For anything else (a file, a database), implement `StateSaver`: `restore()`, and `onStateChanged(state)` or `bind(current)`.
 
 ## Compose extensions
 
-### collectAsStateWithLifecycle
+| | |
+|---|---|
+| `host.collectAsStateWithLifecycle()` | The state, collected while the lifecycle is at least STARTED. |
+| `host.collectEffect { }` | The effects, handled while the lifecycle is at least STARTED. One emitted while the app is in the background, or the screen under another one, waits for the return. |
+| `host.collectEffectAlways { }` | The effects, whatever the lifecycle. |
+| `PulseScreen(host, onEffect = { }) { state, dispatch -> }` | The two above and the content, in one call. |
+| `rememberReducer(reducer, initialState)` | A state and its pure reducer held by the composition: a component used alone, a `@Preview` that reacts. |
+| `rememberContainer(contract, initialState) { intent, change -> }` | A container that lives with the composition, where there is no ViewModel: a dialog, a widget, a desktop window. |
+| `host.onLifecycleIntent { onResume { Intent.X } }` | An intent at a lifecycle event. Most of the time `onStart` and `whileActive` in the ViewModel say the same without the screen. |
+| `host.onCompositionIntent { onEnter { }; onExit { } }` | An intent when the caller enters and leaves the composition. |
 
-Lifecycle-aware state collection. Defaults to `Lifecycle.State.STARTED`.
+## Components
 
-```kotlin
-val state by viewModel.collectAsStateWithLifecycle()
-```
-
-### collectEffect
-
-Lifecycle-aware one-shot effect collector.
-
-```kotlin
-viewModel.collectEffect { effect ->
-    when (effect) {
-        is Effect.Navigate -> navigator.navigate(effect.route)
-        is Effect.ShowToast -> snackbarHostState.showSnackbar(effect.message)
-    }
-}
-```
-
-### onLifecycleIntent
-
-Maps Android lifecycle events to intents. Dispatch lifecycle-driven logic without leaking lifecycle awareness into the ViewModel.
+A `ComponentContract` is a reusable piece of state with its own intents and pure reducer, and nothing else: no effects, no coroutines. Whoever holds it keeps its state, hands it its intents, and does the async work its intents ask for.
 
 ```kotlin
-viewModel.onLifecycleIntent {
-    onCreate  { Intent.OnCreated }
-    onStart   { Intent.OnStarted }
-    onResume  { Intent.OnResumed }
-    onPause   { Intent.OnPaused }
-    onStop    { Intent.OnStopped }
-    onDestroy { Intent.OnDestroyed }
-}
-```
-
-### onCompositionIntent
-
-Maps Compose composition enter/exit events to intents.
-
-```kotlin
-viewModel.onCompositionIntent {
-    onEnter { Intent.OnScreenEntered }
-    onExit  { Intent.OnScreenExited }
-}
-```
-
-## ComponentContract
-
-A lightweight sub-container for complex nested state. Has its own reducer but no effects or async handling. Useful for reusable UI components (color pickers, form fields, etc.) that can be embedded in a parent screen's state.
-
-```kotlin
-object ColorPickerComponent : ComponentContract<ColorPickerComponent.State, ColorPickerComponent.Intent>() {
-
-    override val initialState = State()
-
-    @Serializable
-    data class State(
-        val red: Float = 0f,
-        val green: Float = 0f,
-        val blue: Float = 0f,
-    )
-
+object ColorPicker : ComponentContract<ColorPicker.State, ColorPicker.Intent>(State()) {
+    data class State(val red: Float = 0f, val green: Float = 0f, val blue: Float = 0f)
     sealed interface Intent {
         data class SetRed(val value: Float) : Intent
-        data class SetGreen(val value: Float) : Intent
-        data class SetBlue(val value: Float) : Intent
+        data object Confirm : Intent
     }
-
     override fun reduce(state: State, intent: Intent): State = when (intent) {
-        is Intent.SetRed   -> state.copy(red = intent.value.coerceIn(0f, 1f))
-        is Intent.SetGreen -> state.copy(green = intent.value.coerceIn(0f, 1f))
-        is Intent.SetBlue  -> state.copy(blue = intent.value.coerceIn(0f, 1f))
+        is Intent.SetRed -> state.copy(red = intent.value.coerceIn(0f, 1f))
+        Intent.Confirm -> state
+    }
+}
+
+@Composable
+fun ColorPickerContent(state: ColorPicker.State, dispatch: (ColorPicker.Intent) -> Unit) { /* pure UI */ }
+```
+
+**Inside a screen**: a field, a wrapping intent, one reducer line.
+
+```kotlin
+data class UiState(val picker: ColorPicker.State = ColorPicker.initialState)
+sealed interface Intent { data class Picker(val intent: ColorPicker.Intent) : Intent }
+
+override fun reduce(state: UiState, intent: Intent) = when (intent) {
+    is Intent.Picker -> state.copy(picker = ColorPicker.reduce(state.picker, intent.intent))
+}
+
+// UI
+ColorPickerContent(state.picker) { dispatch(Intent.Picker(it)) }
+```
+
+**The parent reacts to its child** by matching the wrapped intent, in its reducer or in its side effects. That is how a pure component asks for async work:
+
+```kotlin
+override suspend fun handleIntent(intent: Intent) {
+    when (intent) {
+        is Intent.Picker -> if (intent.intent == ColorPicker.Intent.Confirm) repository.save(state.picker)
     }
 }
 ```
 
-Embed in a parent contract:
+**Inside another component**: the same three pieces, since a contract and a component are both a `Reducer`. A contract can be embedded as a component too.
+
+**Alone**, with no parent: `val (state, dispatch) = rememberReducer(ColorPicker)`.
+
+**Slots** (experimental) declare once where a child lives in its parent. They earn their keep with a list of children, each found by its id:
 
 ```kotlin
-object PageContract : ContainerContract<PageContract.UiState, PageContract.Intent, PageContract.Effect>() {
+private val ROWS = listSlot(Row, UiState::rows, { state, rows -> state.copy(rows = rows) }) { it.id }
 
-    data class UiState(
-        val title: String = "",
-        val colorPicker: ColorPickerComponent.State = ColorPickerComponent.initialState,
-    )
-
-    sealed interface Intent {
-        data class ColorPicker(val intent: ColorPickerComponent.Intent) : Intent
-    }
-}
+is Intent.Row -> ROWS.reduce(state, intent.id, intent.intent)   // one child
+Intent.ResetAll -> ROWS.reduceAll(state, Row.Intent.Reset)      // every child
 ```
 
-Delegate in the ViewModel reducer:
-
-```kotlin
-override fun reduce(state: UiState, intent: Intent): UiState = when (intent) {
-    is Intent.ColorPicker -> state.copy(
-        colorPicker = ColorPickerComponent.reduce(state.colorPicker, intent.intent)
-    )
-}
-```
-
-## Debouncing
-
-`DebouncedDispatcher` is a standalone debounce engine. Create one and wire it to any dispatch function - typically inside a ViewModel.
-
-### Setup
-
-```kotlin
-class SearchViewModel : PulseViewModel<UiState, Intent, Effect>(
-    containerContract = SearchContract,
-    initialState = UiState()
-) {
-
-    private val debouncer = DebouncedDispatcher(viewModelScope, ::dispatch)
-
-    fun dispatchDebounced(intent: Intent, delay: Duration) =
-        debouncer.dispatchDebounced(intent, delay)
-
-    fun cancelDebounce(key: String) = debouncer.cancel(key)
-
-    override fun reduce(state: UiState, intent: Intent) = when (intent) {
-        is Intent.UpdateQuery -> state.copy(query = intent.query)
-        is Intent.Search -> state
-    }
-
-    override suspend fun handleIntent(intent: Intent) {
-        if (intent is Intent.Search) {
-            val results = api.search(intent.query)
-            updateState { copy(results = results) }
-        }
-    }
-}
-```
-
-### Usage in Compose
-
-```kotlin
-TextField(
-    value = state.query,
-    onValueChange = { query ->
-        dispatch(Intent.UpdateQuery(query))                                   // immediate UI update
-        viewModel.dispatchDebounced(Intent.Search(query), 300.milliseconds)   // debounced API call
-    }
-)
-```
-
-### Debounce options
-
-```kotlin
-// Basic: debounce by intent type (default key)
-debouncer.dispatchDebounced(Intent.Search(query), delay = 300.milliseconds)
-
-// Custom key: independent debounce per field
-debouncer.dispatchDebounced(Intent.UpdateName(name), delay = 300.milliseconds, key = "name")
-debouncer.dispatchDebounced(Intent.UpdateEmail(email), delay = 300.milliseconds, key = "email")
-
-// Skip unchanged: drop duplicate intents
-debouncer.dispatchDebounced(Intent.Search(query), delay = 300.milliseconds, skipIfUnchanged = true)
-
-// Share across types: different intent types cancel each other
-debouncer.dispatchDebounced(Intent.Search(query), delay = 300.milliseconds, shareAcrossTypes = true)
-```
-
-### Cancellation and history
-
-```kotlin
-// Cancel a specific debounce key (e.g., user cleared the search field)
-debouncer.cancel("search")
-
-// Cancel all pending debounces and reset history
-debouncer.cancelAll()
-
-// Reset skipIfUnchanged history without cancelling pending debounces
-debouncer.clearHistory()
-```
+`slot(...)` does the same for a single child.
 
 ## Testing
 
-`pulse-test` provides a synchronous test container and assertion utilities.
-
-### Basic test
+`pulse-test` drives a real host (your ViewModel, a container) from inside `runTest`. Every `expect...` first runs what is due now, never the clock: timers and debounces move only with `advanceBy`.
 
 ```kotlin
 @Test
-fun incrementUpdatesCount() = CounterContract.containerTest(
-    initialState = CounterContract.UiState(),
-    reduce = { state, intent ->
-        when (intent) {
-            Intent.Increment -> state.copy(count = state.count + 1)
-            Intent.Decrement -> state.copy(count = state.count - 1)
-            Intent.Reset -> state.copy(count = 0)
-        }
+fun aDoubleTapSavesOnce() = runTest {
+    Dispatchers.setMain(StandardTestDispatcher(testScheduler))   // for a ViewModel
+    CounterViewModel(FakeRepository()).test(this) {
+        dispatch(Intent.Save)
+        dispatch(Intent.Save)
+        expectState { it.saving }
+        expectEffect<Effect.ShowToast>()
+        expectNoEffects()
+        expectState { !it.saving }
     }
-) {
-    dispatch(Intent.Increment)
-    assertState { it.count == 1 }
-
-    dispatch(Intent.Increment)
-    dispatch(Intent.Increment)
-    assertState(UiState(count = 3))
 }
 ```
 
-### Testing effects
+| | |
+|---|---|
+| `dispatch(intent)` | |
+| `state`, `states` | The state now; every state since the test began. |
+| `expectState(expected)`, `expectState { predicate }` | |
+| `expectEffect<T>()`, `expectEffect(expected)`, `nextEffect()` | The next effect not yet looked at. |
+| `expectNoEffects()` | |
+| `settle()`, `advanceBy(duration)` | Run what is due now; move the clock. |
 
-```kotlin
-@Test
-fun resetEmitsToast() = CounterContract.containerTest(
-    initialState = CounterContract.UiState(),
-    handleIntent = { intent ->
-        when (intent) {
-            Intent.Reset -> emitEffect(Effect.ShowToast("Counter reset"))
-            else -> {}
-        }
-    }
-) {
-    val effect = awaitEffect {
-        dispatch(Intent.Reset)
-    }
-    assertEquals(Effect.ShowToast("Counter reset"), effect)
-}
-```
+A reducer is a pure function, a component too: test them by calling `reduce`.
 
-### Collecting multiple effects
+`TestContainer` and `containerTest` build a container out of lambdas, for testing without a ViewModel; they reduce through the contract's own reducer unless given another.
 
-```kotlin
-@Test
-fun multipleEffects() = runTest {
-    val container = TestContainer(
-        contract = CounterContract,
-        initialState = CounterContract.UiState(),
-        testScope = this,
-        intentHandler = { intent ->
-            when (intent) {
-                Intent.Increment -> emitEffect(Effect.ShowToast("inc"))
-                Intent.Reset -> emitEffect(Effect.ShowToast("reset"))
-                else -> {}
-            }
-        }
-    )
+## Migrating from 0.3
 
-    val effects = container.collectEffects(this) {
-        container.dispatch(Intent.Increment)
-        container.dispatch(Intent.Reset)
-    }
-
-    assertEquals(2, effects.size)
-}
-```
-
-### Testing ComponentContract
-
-ComponentContract has a pure reducer with no async behavior. Test it directly.
-
-```kotlin
-@Test
-fun colorPickerClampsValues() {
-    val state = ColorPickerComponent.reduce(
-        ColorPickerComponent.initialState,
-        ColorPickerComponent.Intent.SetRed(1.5f)
-    )
-    assertEquals(1f, state.red)
-}
-```
+See [MIGRATION.md](MIGRATION.md).
 
 ## Build
 

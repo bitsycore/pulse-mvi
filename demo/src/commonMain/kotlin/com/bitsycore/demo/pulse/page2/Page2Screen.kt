@@ -21,11 +21,8 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -37,8 +34,7 @@ import com.bitsycore.lib.pulse.compose.collectAsStateWithLifecycle
 import com.bitsycore.lib.pulse.compose.collectEffect
 import com.bitsycore.lib.pulse.compose.onCompositionIntent
 import com.bitsycore.lib.pulse.compose.onLifecycleIntent
-import kotlinx.coroutines.delay
-import kotlin.time.Duration.Companion.seconds
+import com.bitsycore.lib.pulse.compose.rememberReducer
 
 @Composable
 fun Page2Screen(
@@ -72,13 +68,6 @@ fun Page2Screen(
 					withDismissAction = true
 				)
 			}
-		}
-	}
-
-	LaunchedEffect(Unit) {
-		while (true) {
-			delay(1.seconds)
-			viewModel.tick()
 		}
 	}
 
@@ -131,9 +120,6 @@ private fun Page2Content(state: Page2Contract.UiState, dispatch: (Page2Contract.
 @Preview
 @Composable
 private fun Page2Preview() {
-	var state by remember { mutableStateOf(Page2Contract.UiState()) }
-	Page2Content(
-		state = state,
-		dispatch = { state = Page2Contract.reduce(state, it) }
-	)
+	val (state, dispatch) = rememberReducer(Page2Contract, Page2Contract.UiState())
+	Page2Content(state, dispatch)
 }

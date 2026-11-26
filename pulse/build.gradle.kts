@@ -8,9 +8,18 @@ plugins {
 
 apply(from = rootProject.file("gradle/publish.gradle.kts"))
 
-val javaVersion: JavaVersion by rootProject.extra
+val javaVersion = rootProject.extra["javaVersion"] as JavaVersion
 
 kotlin {
+
+	explicitApi()
+
+	// The public API is dumped in api/: checkKotlinAbi fails on a change that was not meant,
+	// updateKotlinAbi records one that was.
+	@OptIn(org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation::class)
+	abiValidation {
+		enabled.set(true)
+	}
 
 	// ================================
 	// MARK: Android

@@ -28,9 +28,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -40,10 +38,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bitsycore.demo.pulse.colorpicker.ColorPickerContent
+import com.bitsycore.demo.pulse.palette.PaletteContent
 import com.bitsycore.lib.pulse.compose.collectAsStateWithLifecycle
 import com.bitsycore.lib.pulse.compose.collectEffect
 import com.bitsycore.lib.pulse.compose.onCompositionIntent
 import com.bitsycore.lib.pulse.compose.onLifecycleIntent
+import com.bitsycore.lib.pulse.compose.rememberReducer
 
 @Composable
 fun Page1Screen(
@@ -142,15 +142,21 @@ private fun Page1Content(
 			state = state.colorPicker,
 			dispatch = { dispatch(Page1Contract.Intent.ColorPicker(it)) }
 		)
+
+		Spacer(Modifier.height(16.dp))
+		HorizontalDivider()
+		Spacer(Modifier.height(16.dp))
+
+		PaletteContent(
+			state = state.palette,
+			dispatch = { dispatch(Page1Contract.Intent.Palette(it)) }
+		)
 	}
 }
 
 @Preview
 @Composable
 private fun Page1Preview() {
-	var state by remember { mutableStateOf(Page1Contract.UiState()) }
-	Page1Content(
-		state = state,
-		dispatch = { state = Page1Contract.reduce(state, it) }
-	)
+	val (state, dispatch) = rememberReducer(Page1Contract, Page1Contract.UiState())
+	Page1Content(state, dispatch)
 }

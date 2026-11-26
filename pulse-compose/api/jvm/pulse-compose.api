@@ -1,0 +1,48 @@
+public final class com/bitsycore/lib/pulse/compose/ComposeExtensionsKt {
+	public static final fun collectAsStateWithLifecycle (Lcom/bitsycore/lib/pulse/container/ContainerHost;Landroidx/lifecycle/Lifecycle$State;Landroidx/compose/runtime/Composer;II)Landroidx/compose/runtime/State;
+	public static final fun collectEffect (Lcom/bitsycore/lib/pulse/container/ContainerHost;Landroidx/lifecycle/Lifecycle$State;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+	public static final fun collectEffectAlways (Lcom/bitsycore/lib/pulse/container/ContainerHost;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;I)V
+	public static final fun collectEffectWithLifecycle (Lcom/bitsycore/lib/pulse/container/ContainerHost;Landroidx/lifecycle/Lifecycle$State;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+	public static final fun onCompositionIntent (Lcom/bitsycore/lib/pulse/container/ContainerHost;Ljava/lang/Object;[Ljava/lang/Object;Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;II)V
+	public static final fun onLifecycleIntent (Lcom/bitsycore/lib/pulse/container/ContainerHost;Landroidx/lifecycle/LifecycleOwner;Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/bitsycore/lib/pulse/compose/ReducerState {
+	public static final field $stable I
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun component2 ()Lkotlin/jvm/functions/Function1;
+	public final fun getDispatch ()Lkotlin/jvm/functions/Function1;
+	public final fun getState ()Ljava/lang/Object;
+}
+
+public final class com/bitsycore/lib/pulse/compose/RememberContainerKt {
+	public static final fun PulseScreen (Lcom/bitsycore/lib/pulse/container/ContainerHost;Landroidx/lifecycle/Lifecycle$State;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function4;Landroidx/compose/runtime/Composer;II)V
+	public static final fun rememberContainer (Lcom/bitsycore/lib/pulse/container/ContainerContract;Ljava/lang/Object;Lcom/bitsycore/lib/pulse/container/StateSaver;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function4;Landroidx/compose/runtime/Composer;II)Lcom/bitsycore/lib/pulse/container/ContainerHost;
+}
+
+public final class com/bitsycore/lib/pulse/compose/RememberReducerKt {
+	public static final fun rememberReducer (Lcom/bitsycore/lib/pulse/Reducer;Ljava/lang/Object;Landroidx/compose/runtime/Composer;I)Lcom/bitsycore/lib/pulse/compose/ReducerState;
+	public static final fun rememberReducer (Lcom/bitsycore/lib/pulse/component/ComponentContract;Landroidx/compose/runtime/Composer;I)Lcom/bitsycore/lib/pulse/compose/ReducerState;
+}
+
+public final class com/bitsycore/lib/pulse/scopes/ComposeIntentScope {
+	public static final field $stable I
+	public fun <init> (Lkotlin/jvm/functions/Function1;)V
+	public final fun onEnter (Lkotlin/jvm/functions/Function0;)V
+	public final fun onExit (Lkotlin/jvm/functions/Function0;)V
+}
+
+public final class com/bitsycore/lib/pulse/scopes/LifecycleIntentScope {
+	public static final field $stable I
+	public fun <init> (Lkotlin/jvm/functions/Function1;)V
+	public final fun onCreate (Lkotlin/jvm/functions/Function0;)V
+	public final fun onDestroy (Lkotlin/jvm/functions/Function0;)V
+	public final fun onPause (Lkotlin/jvm/functions/Function0;)V
+	public final fun onResume (Lkotlin/jvm/functions/Function0;)V
+	public final fun onStart (Lkotlin/jvm/functions/Function0;)V
+	public final fun onStop (Lkotlin/jvm/functions/Function0;)V
+}
+
+public abstract interface annotation class com/bitsycore/lib/pulse/scopes/PulseScopeDsl : java/lang/annotation/Annotation {
+}
+
